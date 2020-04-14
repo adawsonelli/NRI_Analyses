@@ -1,0 +1,11 @@
+
+
+#folders
+bin/
+.vscode
+.ipynb_checkpoints
+
+#folders to git ignore
+
+*checkpoint.ipynb
+*.pyc
