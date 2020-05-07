@@ -103,11 +103,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.9870884"
-     inkscape:cx="422.43252"
-     inkscape:cy="134.63749"
+     inkscape:zoom="1.3959538"
+     inkscape:cx="91.832818"
+     inkscape:cy="237.68924"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g2794"
      showgrid="false"
      inkscape:window-width="1920"
      inkscape:window-height="1017"
@@ -122,7 +122,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -441,7 +441,7 @@
            x="116.53796"
            y="278.86145"
            style="font-size:5.86215162px;stroke-width:0.34445429"
-           id="tspan1519-9">* 5 - link lengths [              ]</tspan><tspan
+           id="tspan1519-9">* 5 - link lengths [                  ]</tspan><tspan
            id="tspan2421"
            sodipodi:role="line"
            x="116.53796"
@@ -453,7 +453,7 @@
          d="M 45.062703,274.03098 70.877692,259.91429"
          style="fill:none;stroke:#cccccc;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1.05999998, 1.05999998;stroke-dashoffset:0;stroke-opacity:1" />
       <g
-         transform="matrix(0.91318274,0,0,0.91024794,-50.002725,107.83008)"
+         transform="matrix(0.91318274,0,0,0.91024794,51.485516,115.68626)"
          id="g1543-2"
          style="opacity:0.98999999;stroke-width:1.09683502">
         <text
@@ -1045,7 +1045,7 @@
       </g>
       <g
          style="stroke-width:0.84250438"
-         transform="matrix(1.1869374,0,0,1.1869374,-11.394969,135.61335)"
+         transform="matrix(1.1869374,0,0,1.1869374,-5.9458124,135.61335)"
          id="g2533">
         <g
            transform="matrix(0.76936048,0,0,0.76688788,55.51857,-13.063842)"
@@ -1309,6 +1309,64 @@
                y="124.65707"
                style="font-size:2.11666656px;fill:#0000ff;fill-opacity:0.99215686;stroke-width:0.18831481">2</tspan></text>
         </g>
+      </g>
+      <g
+         style="opacity:0.98999999;stroke-width:1.09683502"
+         id="g1050"
+         transform="matrix(0.91318274,0,0,0.91024794,51.485516,115.68626)">
+        <text
+           transform="scale(0.99839179,1.0016108)"
+           id="text1044"
+           y="178.48212"
+           x="118.84906"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.59272385px;line-height:1.25;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';letter-spacing:0px;word-spacing:0px;fill:#cccccc;fill-opacity:1;stroke:none;stroke-width:0.37780952"
+           xml:space="preserve"><tspan
+             style="font-size:4.59272385px;fill:#cccccc;stroke:none;stroke-width:0.37780952"
+             y="178.48212"
+             x="118.84906"
+             id="tspan1042"
+             sodipodi:role="line">L</tspan></text>
+        <text
+           transform="scale(0.99839179,1.0016108)"
+           id="text1048"
+           y="179.772"
+           x="121.42374"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.37089539px;line-height:1.25;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';letter-spacing:0px;word-spacing:0px;fill:#cccccc;fill-opacity:1;stroke:none;stroke-width:0.37780952"
+           xml:space="preserve"><tspan
+             style="font-size:4.59272385px;fill:#cccccc;stroke:none;stroke-width:0.37780952"
+             y="179.772"
+             x="121.42374"
+             id="tspan1046"
+             sodipodi:role="line">0</tspan></text>
+      </g>
+      <g
+         transform="matrix(0.91318274,0,0,0.91024794,-52.984716,101.54693)"
+         id="g1060"
+         style="opacity:0.98999999;stroke-width:1.09683502">
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.59272385px;line-height:1.25;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';letter-spacing:0px;word-spacing:0px;fill:#cccccc;fill-opacity:1;stroke:none;stroke-width:0.37780952"
+           x="118.84906"
+           y="178.48212"
+           id="text1054"
+           transform="scale(0.99839179,1.0016108)"><tspan
+             sodipodi:role="line"
+             id="tspan1052"
+             x="118.84906"
+             y="178.48212"
+             style="font-size:4.59272385px;fill:#cccccc;stroke:none;stroke-width:0.37780952">L</tspan></text>
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.37089539px;line-height:1.25;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';letter-spacing:0px;word-spacing:0px;fill:#cccccc;fill-opacity:1;stroke:none;stroke-width:0.37780952"
+           x="121.42374"
+           y="179.772"
+           id="text1058"
+           transform="scale(0.99839179,1.0016108)"><tspan
+             sodipodi:role="line"
+             id="tspan1056"
+             x="121.42374"
+             y="179.772"
+             style="font-size:4.59272385px;fill:#cccccc;stroke:none;stroke-width:0.37780952">0</tspan></text>
       </g>
     </g>
   </g>
