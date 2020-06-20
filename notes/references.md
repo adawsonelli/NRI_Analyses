@@ -1,0 +1,1 @@
+http://www.ent.mrt.ac.lk/~rohan/teaching/ME5144/LectureNotes/Lec%205%20Kinematics.pdf 
