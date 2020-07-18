@@ -16,5 +16,6 @@ dependencies:
   - scipy=1.4.1
   - sympy=1.5.1
   - plotly=4.5.4=py_0
+  - jupyterlab-plotly-extension=1.0.0
 
 
