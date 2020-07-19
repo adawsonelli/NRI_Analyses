@@ -2,5 +2,5 @@
 
 # Install a JupyterLab extension for demonstration purposes
 jupyter labextension install @jupyter-widgets/jupyterlab-manager
-jupyter labextension install @jupyterlab-plotly
-jupyter labextension install @plotlywidget
+jupyter labextension install jupyterlab-plotly
+jupyter labextension install plotlywidget
