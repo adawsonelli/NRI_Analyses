@@ -1,4 +1,6 @@
 #!/bin/bash
 
 # Install a JupyterLab extension for demonstration purposes
-jupyter labextension install @jupyterlab/plotly-extension
+jupyter labextension install @jupyter-widgets/jupyterlab-manager v1.1.0
+jupyter labextension install @jupyterlab-plotly v1.5.4
+jupyter labextension install @plotlywidget v1.5.4
