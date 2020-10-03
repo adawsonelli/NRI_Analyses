@@ -23,7 +23,7 @@ assetsPath = "C:/Users/adaws/Documents/gitRepos/NRI_Analyses/chrono/assets/"
 ## and then it can be directly connected to the simulation system developed below. 
 
 #initial location of the end effector (EE) of the ALEX Robot
-Xee =   1    #(these form the initial conditions of the robot)
+Xee =  .5    #(these form the initial conditions of the robot)
 Yee = -.5
 
 
@@ -38,8 +38,8 @@ elif side == "left":
 
 
 #hardcode robot link lengths and origins
-xl = 0 ; yl = -.26 
-xr = 0 ; yr = -.06
+xl = 0 ; yl = -.27 
+xr = 0 ; yr = -.055
 
 
 #left robot
@@ -91,13 +91,34 @@ if np.isnan(θ1l and θ2l and θ1r and θ2r):
     
 #define a library function for calculating FK of COM locations for each link
 
-#%% 
 
 #--------------- Create the simulation system ---------------------------------
 mysystem = chrono.ChSystemNSC()
 
 
 #--------------- create each link as a rigid body -----------------------------
+
+
+#------------- ground body ------------
+GB = chrono.ChBodyAuxRef()
+GB.SetPos(chrono.ChVectorD(0,(yl+yr)/2,0))
+GB.SetBodyFixed(True)
+
+#set mesh visualization
+mesh_for_visualization = chrono.ChTriangleMeshConnected()
+mesh_for_visualization.LoadWavefrontMesh(assetsPath +'ground.obj')
+
+# Optionally: you can scale/shrink/rotate/translate the mesh using this:
+meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
+mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), meshRotation)
+
+# Now the  triangle mesh is inserted in a ChTriangleMeshShape visualization asset, 
+# and added to the body
+visualization_shape = chrono.ChTriangleMeshShape()
+visualization_shape.SetMesh(mesh_for_visualization)
+GB.AddAsset(visualization_shape)
+mysystem.Add(GB)
+
 
 ##ground left
 #side = .1
@@ -122,9 +143,9 @@ mysystem = chrono.ChSystemNSC()
 #body_A.GetAssets.
 #mysystem.Add(body_A) 
 
-#add a coordinate frame to your system
+#--------- coordinate frame ---------------
 coord = chrono.ChBodyAuxRef()
-coord.SetPos(chrono.ChVectorD(0,0,0))  #set this smarter...
+coord.SetPos(chrono.ChVectorD(0,0,0))
 coord.SetBodyFixed(True)
 
 mesh_for_visualization = chrono.ChTriangleMeshConnected()
@@ -137,27 +158,133 @@ coord.AddAsset(visualization_shape)
 mysystem.Add(coord)
 
 
+#----------- left link 1 ------------------
+#add body
+L1l = chrono.ChBodyAuxRef()
+L1l.SetBodyFixed(True)
+mysystem.Add(L1l)
 
+#add mass properties  //improve these based on actual data...
+L1l.SetMass(1)
 
+#set position,orientation with FK
+x =  xl + (_L1l/2)*np.cos(θ1l)
+y =  yl + (_L1l/2)*np.sin(θ1l)
+L1l.SetPos(chrono.ChVectorD(x,y,.01))
+L1l.SetRot(chrono.ChMatrix33D(θ1l,chrono.ChVectorD(0,0,1)))
 
-#set ground body and mesh - using method B
-GB = chrono.ChBodyAuxRef()
-GB.SetPos(chrono.ChVectorD(0,0,0))  #set this smarter...
-GB.SetBodyFixed(True)
-
+#add visualization
 mesh_for_visualization = chrono.ChTriangleMeshConnected()
-mesh_for_visualization.LoadWavefrontMesh(assetsPath +'ground1.obj')
-
-# Optionally: you can scale/shrink/rotate the mesh using this:
+mesh_for_visualization.LoadWavefrontMesh(assetsPath +'_L1l.obj')
 meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
 mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), meshRotation)
 
-# Now the  triangle mesh is inserted in a ChTriangleMeshShape visualization asset, 
-# and added to the body
 visualization_shape = chrono.ChTriangleMeshShape()
 visualization_shape.SetMesh(mesh_for_visualization)
-GB.AddAsset(visualization_shape)
-mysystem.Add(GB)
+L1l.AddAsset(visualization_shape)
+
+texture = chrono.ChTexture()
+texture.SetTextureFilename(assetsPath + 'blue.png')
+L1l.GetAssets().push_back(texture)
+
+
+#----------- left link 2 ------------------
+#add body
+L2l = chrono.ChBodyAuxRef()
+L2l.SetBodyFixed(True)
+mysystem.Add(L2l)
+
+#add mass properties  //improve these based on actual data...
+L1l.SetMass(1)
+
+#set position,orientation with FK
+x =  xl + (_L1l)*np.cos(θ1l) + (_L23l/2)*np.cos(θ1l + θ2l)
+y =  yl + (_L1l)*np.sin(θ1l) + (_L23l/2)*np.sin(θ1l + θ2l)
+L2l.SetPos(chrono.ChVectorD(x,y,.02))
+L2l.SetRot(chrono.ChMatrix33D(θ1l + θ2l,chrono.ChVectorD(0,0,1)))
+
+#add visualization
+mesh_for_visualization = chrono.ChTriangleMeshConnected()
+mesh_for_visualization.LoadWavefrontMesh(assetsPath +'_L2l.obj')
+meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
+ #mesh origin was slightly off, so I hand tuned it 
+mesh_for_visualization.Transform(chrono.ChVectorD(-.00775,0,0), meshRotation)
+
+visualization_shape = chrono.ChTriangleMeshShape()
+visualization_shape.SetMesh(mesh_for_visualization)
+L2l.AddAsset(visualization_shape)
+
+texture = chrono.ChTexture()
+texture.SetTextureFilename(assetsPath + 'blue.png')
+L2l.GetAssets().push_back(texture)
+
+
+#----------- right link 1 -----------------
+#add body
+L1r = chrono.ChBodyAuxRef()
+L1r.SetBodyFixed(True)
+mysystem.Add(L1r)
+
+#add mass properties  //improve these based on actual data...
+L1l.SetMass(1)
+
+#set position,orientation with FK
+x =  xr + (_L1r/2)*np.cos(θ1r)
+y =  yr + (_L1r/2)*np.sin(θ1r)
+L1r.SetPos(chrono.ChVectorD(x,y,.02))
+L1r.SetRot(chrono.ChMatrix33D(θ1r,chrono.ChVectorD(0,0,1)))
+
+#add visualization
+mesh_for_visualization = chrono.ChTriangleMeshConnected()
+mesh_for_visualization.LoadWavefrontMesh(assetsPath +'_L1r.obj')
+meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
+mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), meshRotation)
+
+visualization_shape = chrono.ChTriangleMeshShape()
+visualization_shape.SetMesh(mesh_for_visualization)
+L1r.AddAsset(visualization_shape)
+
+texture = chrono.ChTexture()
+texture.SetTextureFilename(assetsPath + 'red.png')
+L1r.GetAssets().push_back(texture)
+
+#----------- right link 2 -----------------
+#add body
+L2r =  chrono.ChBodyAuxRef()
+L2r.SetBodyFixed(True)
+mysystem.Add(L2r)
+
+#add mass properties  //improve these based on actual data...
+L1l.SetMass(1)
+
+#set position,orientation with FK
+x =  xr + (_L1r)*np.cos(θ1r) + (_L2r/2)*np.cos(θ1r + θ2r)
+y =  yr + (_L1r)*np.sin(θ1r) + (_L2r/2)*np.sin(θ1r + θ2r)
+L2r.SetPos(chrono.ChVectorD(x,y,.03))
+L2r.SetRot(chrono.ChMatrix33D(θ1r + θ2r,chrono.ChVectorD(0,0,1)))
+
+#add visualization
+mesh_for_visualization = chrono.ChTriangleMeshConnected()
+mesh_for_visualization.LoadWavefrontMesh(assetsPath +'_L2r.obj')
+meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
+mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), meshRotation)
+
+visualization_shape = chrono.ChTriangleMeshShape()
+visualization_shape.SetMesh(mesh_for_visualization)
+L2r.AddAsset(visualization_shape)
+
+texture = chrono.ChTexture()
+texture.SetTextureFilename(assetsPath + 'red.png')
+L2r.GetAssets().push_back(texture)
+
+#----------- end effector payload ---------
+
+
+
+
+
+
+
 
 
 
@@ -183,19 +310,19 @@ mysystem.Add(GB)
 #mboxasset.GetBoxGeometry().Size = chrono.ChVectorD(0.1,_L2l,0.1)
 #L1l.AddAsset(mboxasset)
 
-
-#link 1 right
-L1r = chrono.ChBody()
-L1r.SetBodyFixed(False)
-mysystem.Add(L1r)
-
-#add mass properties here
-L1r.SetRot(chrono.ChMatrix33D(4,chrono.ChVectorD(0,0,1)))
-
-
-mboxasset = chrono.ChBoxShape()
-mboxasset.GetBoxGeometry().Size = chrono.ChVectorD(0.025,_L1r,0.01)
-L1r.AddAsset(mboxasset)
+#
+##link 1 right
+#L1r = chrono.ChBody()
+#L1r.SetBodyFixed(False)
+#mysystem.Add(L1r)
+#
+##add mass properties here
+#L1r.SetRot(chrono.ChMatrix33D(4,chrono.ChVectorD(0,0,1)))
+#
+#
+#mboxasset = chrono.ChBoxShape()
+#mboxasset.GetBoxGeometry().Size = chrono.ChVectorD(0.025,_L1r,0.01)
+#L1r.AddAsset(mboxasset)
 
 
 #link 2 right
@@ -287,7 +414,7 @@ mysystem.Add(mlink)
 
 #L1r.SetRot(chrono.ChMatrix33D(.57,chrono.ChVectorD(0,0,1)))
 
-# --------------------------- setup the IK ------------------------------------
+# -------------------------- setup torque motors ------------------------------
 
 
 
