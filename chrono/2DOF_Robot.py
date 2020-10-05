@@ -16,13 +16,6 @@ assetsPath = "C:/Users/adaws/Documents/gitRepos/NRI_Analyses/chrono/assets/"
 
 # ----------- Calculate IK angles using custom Library ------------------------
 
-## in the future, this should be formulated so that you can select a location
-## Xee, Yee, and the system will initialize with all of the correct angles, etc
-## to do this, we will need to import the code that we have already written, and 
-## move some code from notebooks, into .py files or something to this effect,
-## and then it can be directly connected to the simulation system developed below. 
-
-
 #initial location of the end effector (EE) of the ALEX Robot
 Xee =  .5    #(these form the initial conditions of the robot)
 Yee = -.5
@@ -90,15 +83,10 @@ if np.isnan(θ1l and θ2l and θ1r and θ2r):
     raise ValueError("there is no solution to IK for the end-effector location specified (Xee,Yee)")
 
     
-#define a library function for calculating FK of COM locations for each link
-
-
 #--------------- Create the simulation system ---------------------------------
 mysystem = chrono.ChSystemNSC()
 
-
 #--------------- create each link as a rigid body -----------------------------
-
 
 #------------- ground body ------------
 GB = chrono.ChBodyAuxRef()
@@ -120,29 +108,6 @@ visualization_shape.SetMesh(mesh_for_visualization)
 GB.AddAsset(visualization_shape)
 mysystem.Add(GB)
 
-
-##ground left
-#side = .1
-#GL = chrono.ChBody()
-#GL.SetBodyFixed(True)
-#GL.SetPos(chrono.ChVectorD(0,yl - side/2,-0.2))
-#mysystem.Add(GL)
-#
-#mboxasset = chrono.ChBoxShape()
-#mboxasset.GetBoxGeometry().Size = chrono.ChVectorD(side,side,0.01)
-#GL.AddAsset(mboxasset)
-
-#ground (make default object, then set visualization)
-
-#body_A = chrono.ChBodyEasyMesh(assetsPath +'ground.obj', # mesh filename
-#                               7000,                     # density kg/m^3
-#                               True,                     # use mesh for visualization?
-#                               False)                    # use mesh for collision?
-#
-#body_A.SetBodyFixed(True)
-#body_A.SetPos(chrono.ChVectorD(0,0,0))
-#body_A.GetAssets.
-#mysystem.Add(body_A) 
 
 #--------- coordinate frame ---------------
 coord = chrono.ChBodyAuxRef()
@@ -303,91 +268,6 @@ visualization_shape = chrono.ChTriangleMeshShape()
 visualization_shape.SetMesh(mesh_for_visualization)
 ee.AddAsset(visualization_shape)
 
-#texture = chrono.ChTexture()
-#texture.SetTextureFilename(assetsPath + 'red.png')
-#L2r.GetAssets().push_back(texture)
-
-##link 1 left
-#L1l = chrono.ChBody()
-#L1l.SetBodyFixed(False)
-#mysystem.Add(L1l)
-#
-##add mass properties here
-#
-#mboxasset = chrono.ChBoxShape()
-#mboxasset.GetBoxGeometry().Size = chrono.ChVectorD(0.1,_L1l,0.1)
-#L1l.AddAsset(mboxasset)
-
-##link 2 left
-#L2l = chrono.ChBody()
-#L2l.SetBodyFixed(False)
-#mysystem.Add(L2l)
-#
-##add mass properties here 
-#
-#mboxasset = chrono.ChBoxShape()
-#mboxasset.GetBoxGeometry().Size = chrono.ChVectorD(0.1,_L2l,0.1)
-#L1l.AddAsset(mboxasset)
-
-#
-##link 1 right
-#L1r = chrono.ChBody()
-#L1r.SetBodyFixed(False)
-#mysystem.Add(L1r)
-#
-##add mass properties here
-#L1r.SetRot(chrono.ChMatrix33D(4,chrono.ChVectorD(0,0,1)))
-#
-#
-#mboxasset = chrono.ChBoxShape()
-#mboxasset.GetBoxGeometry().Size = chrono.ChVectorD(0.025,_L1r,0.01)
-#L1r.AddAsset(mboxasset)
-
-
-#link 2 right
-#L2r = chrono.ChBody()
-#L2r.SetBodyFixed(False)
-#mysystem.Add(L2r)
-#
-##add mass properties here
-#
-#mboxasset = chrono.ChBoxShape()
-#mboxasset.GetBoxGeometry().Size = chrono.ChVectorD(0.025,_L2r,0.01)
-#L1r.AddAsset(mboxasset)
-#
-
-
-
-
-
-
-## Create a fixed rigid body
-#
-#mbody1 = chrono.ChBody()
-#mbody1.SetBodyFixed(True)
-#mbody1.SetPos( chrono.ChVectorD(0,0,-0.2))
-#mysystem.Add(mbody1)
-#
-#mboxasset = chrono.ChBoxShape()
-#mboxasset.GetBoxGeometry().Size = chrono.ChVectorD(0.2,0.5,0.1)
-#mbody1.AddAsset(mboxasset)
-#
-#
-#
-## Create a swinging rigid body
-#
-#mbody2 = chrono.ChBody()
-#mbody2.SetBodyFixed(False)
-#mysystem.Add(mbody2)
-#
-#mboxasset = chrono.ChBoxShape()
-#mboxasset.GetBoxGeometry().Size = chrono.ChVectorD(0.2,0.5,0.1)
-#mbody2.AddAsset(mboxasset)
-#
-#mboxtexture = chrono.ChTexture()
-#mboxtexture.SetTextureFilename('../../../data/concrete.jpg')
-#mbody2.GetAssets().push_back(mboxtexture)
-
 
 #----------------------- create the revolute joints ---------------------------
 
@@ -441,47 +321,6 @@ ee_frame = chrono.ChFrameD(chrono.ChVectorD(0,0,0))                  #local fram
 jt.Initialize(L2l,ee,local,L2l_frame,ee_frame)                       #init joint
 mysystem.Add(jt)                                                     #add to system
 
-
-
-
-##create revolute joint object
-#mlink = chrono.ChLinkRevolute()
-#
-## the coordinate system of the constraint reference in abs. space:
-#mframe = chrono.ChFrameD(chrono.ChVectorD(0.1,0.5,0))
-#
-## initialize the constraint telling which part must be connected, and where:
-#mlink.Initialize(GL,L1l, mframe)
-#
-##add to system
-#mysystem.Add(mlink)
-
-
-# L2l <-> L23l
-
-# GR <-> L1r
-#mlink = chrono.ChLinkRevolute()                                 #create revolute joint object
-#
-#local = True                                                    #we will use the local frame
-#GR_frame =  chrono.ChFrameD(chrono.ChVectorD(0,0,0))            #local frame of attachment
-#L1r_frame = chrono.ChFrameD(chrono.ChVectorD(0.0,-1*_L1r,-.02))     #local frame of attachment
-#
-#mlink.Initialize(GL,L1r,local,GR_frame,L1r_frame)
-#mysystem.Add(mlink)
-
-## l1r <-> L2r
-#mmlink = chrono.ChLinkRevolute()                                 #create revolute joint object
-#
-#local = True                                                    #we will use the local frame
-#L1r_frame =  chrono.ChFrameD(chrono.ChVectorD(0,-1*_L1r/2,0))        #local frame of attachment
-#L2r_frame = chrono.ChFrameD(chrono.ChVectorD(0.0,0.0,-.02))     #local frame of attachment
-#
-#mmlink.Initialize(L1r,L2r,local,L1r_frame,L2r_frame)
-#mysystem.Add(mmlink)
-#
-
-
-#L1r.SetRot(chrono.ChMatrix33D(.57,chrono.ChVectorD(0,0,1)))
 
 # -------------------------- setup torque motors ------------------------------
 
