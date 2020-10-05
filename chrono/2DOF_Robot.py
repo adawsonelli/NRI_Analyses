@@ -22,6 +22,7 @@ assetsPath = "C:/Users/adaws/Documents/gitRepos/NRI_Analyses/chrono/assets/"
 ## move some code from notebooks, into .py files or something to this effect,
 ## and then it can be directly connected to the simulation system developed below. 
 
+
 #initial location of the end effector (EE) of the ALEX Robot
 Xee =  .5    #(these form the initial conditions of the robot)
 Yee = -.5
@@ -161,7 +162,7 @@ mysystem.Add(coord)
 #----------- left link 1 ------------------
 #add body
 L1l = chrono.ChBodyAuxRef()
-L1l.SetBodyFixed(True)
+L1l.SetBodyFixed(False)
 mysystem.Add(L1l)
 
 #add mass properties  //improve these based on actual data...
@@ -191,7 +192,7 @@ L1l.GetAssets().push_back(texture)
 #----------- left link 2 ------------------
 #add body
 L2l = chrono.ChBodyAuxRef()
-L2l.SetBodyFixed(True)
+L2l.SetBodyFixed(False)
 mysystem.Add(L2l)
 
 #add mass properties  //improve these based on actual data...
@@ -222,7 +223,7 @@ L2l.GetAssets().push_back(texture)
 #----------- right link 1 -----------------
 #add body
 L1r = chrono.ChBodyAuxRef()
-L1r.SetBodyFixed(True)
+L1r.SetBodyFixed(False)
 mysystem.Add(L1r)
 
 #add mass properties  //improve these based on actual data...
@@ -250,8 +251,8 @@ L1r.GetAssets().push_back(texture)
 
 #----------- right link 2 -----------------
 #add body
-L2r =  chrono.ChBodyAuxRef()
-L2r.SetBodyFixed(True)
+L2r = chrono.ChBodyAuxRef()
+L2r.SetBodyFixed(False)
 mysystem.Add(L2r)
 
 #add mass properties  //improve these based on actual data...
@@ -278,15 +279,33 @@ texture.SetTextureFilename(assetsPath + 'red.png')
 L2r.GetAssets().push_back(texture)
 
 #----------- end effector payload ---------
+#add body
+ee = chrono.ChBodyAuxRef()
+ee.SetBodyFixed(False)
+mysystem.Add(ee)
 
+#add mass properties  //improve these based on actual data...
+L1l.SetMass(1)
 
+#set position,orientation with FK
+x =  xl + (_L1l)*np.cos(θ1l) + (_L23l)*np.cos(θ1l + θ2l)
+y =  yl + (_L1l)*np.sin(θ1l) + (_L23l)*np.sin(θ1l + θ2l)
+ee.SetPos(chrono.ChVectorD(x,y,.03))
+ee.SetRot(chrono.ChMatrix33D(0,chrono.ChVectorD(0,0,1)))
 
+#add visualization
+mesh_for_visualization = chrono.ChTriangleMeshConnected()
+mesh_for_visualization.LoadWavefrontMesh(assetsPath +'_EE.obj')
+meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
+mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), meshRotation)
 
+visualization_shape = chrono.ChTriangleMeshShape()
+visualization_shape.SetMesh(mesh_for_visualization)
+ee.AddAsset(visualization_shape)
 
-
-
-
-
+#texture = chrono.ChTexture()
+#texture.SetTextureFilename(assetsPath + 'red.png')
+#L2r.GetAssets().push_back(texture)
 
 ##link 1 left
 #L1l = chrono.ChBody()
@@ -372,9 +391,59 @@ L2r.GetAssets().push_back(texture)
 
 #----------------------- create the revolute joints ---------------------------
 
+#------------- GB  <-> L1l --------------
+jt = chrono.ChLinkRevolute()                                         #create revolute joint object
+local = True                                                         #we will use the local frame
+GB_frame =  chrono.ChFrameD(chrono.ChVectorD(0,-1*(yr - yl)/2,0.01))  #local frame of attachment
+L1l_frame = chrono.ChFrameD(chrono.ChVectorD(-1*_L1l/2,0,0))         #local frame of attachment
+jt.Initialize(GB,L1l,local,GB_frame,L1l_frame)                       #init joint
+mysystem.Add(jt)                                                     #add to system
 
-#GL <-> L1l
+##------------- L1l <-> L2l --------------
+jt = chrono.ChLinkRevolute()                                         #create revolute joint object
+local = True                                                         #we will use the local frame
+L1l_frame = chrono.ChFrameD(chrono.ChVectorD(_L1l/2,0,0.01))          #local frame of attachment
+L2l_frame = chrono.ChFrameD(chrono.ChVectorD(-1*_L23l/2,0,0))        #local frame of attachment
+jt.Initialize(L1l,L2l,local,L1l_frame,L2l_frame)                     #init joint
+mysystem.Add(jt)                                                     #add to system
+
+##------------- GB  <-> L1r --------------
+jt = chrono.ChLinkRevolute()                                         #create revolute joint object
+local = True                                                         #we will use the local frame
+GB_frame =  chrono.ChFrameD(chrono.ChVectorD(0,(yr - yl)/2,.02))     #local frame of attachment
+L1r_frame = chrono.ChFrameD(chrono.ChVectorD(-1*_L1r/2,0,0))         #local frame of attachment
+jt.Initialize(GB,L1r,local,GB_frame,L1r_frame)                       #init joint
+mysystem.Add(jt)                                                     #add to system
+
+
+##------------- L1r <-> L2r --------------
+jt = chrono.ChLinkRevolute()                                         #create revolute joint object
+local = True                                                         #we will use the local frame
+L1r_frame = chrono.ChFrameD(chrono.ChVectorD(_L1r/2,0,.01))          #local frame of attachment
+L2r_frame = chrono.ChFrameD(chrono.ChVectorD(-1*_L2r/2,0,0))        #local frame of attachment
+jt.Initialize(L1r,L2r,local,L1r_frame,L2r_frame)                     #init joint
+mysystem.Add(jt)                                                     #add to system
+
+##------------- L2l <-> L2r --------------
+jt = chrono.ChLinkRevolute()                                         #create revolute joint object
+local = True                                                         #we will use the local frame
+dj = -1*(_L23l/2 - _L2l)                                             #distance from center to joint point
+L2l_frame = chrono.ChFrameD(chrono.ChVectorD(dj,0,.01))              #local frame of attachment
+L2r_frame = chrono.ChFrameD(chrono.ChVectorD(_L2r/2,0,0))            #local frame of attachment
+jt.Initialize(L2l,L2r,local,L2l_frame,L2r_frame)                     #init joint
+mysystem.Add(jt)                                                     #add to system
 #
+##------------- EE <-> L2l --------------
+jt = chrono.ChLinkRevolute()                                         #create revolute joint object
+local = True                                                         #we will use the local frame                                          #distance from center to joint point
+L2l_frame = chrono.ChFrameD(chrono.ChVectorD(_L23l/2,0,.01))         #local frame of attachment
+ee_frame = chrono.ChFrameD(chrono.ChVectorD(0,0,0))                  #local frame of attachment
+jt.Initialize(L2l,ee,local,L2l_frame,ee_frame)                       #init joint
+mysystem.Add(jt)                                                     #add to system
+
+
+
+
 ##create revolute joint object
 #mlink = chrono.ChLinkRevolute()
 #
@@ -391,14 +460,14 @@ L2r.GetAssets().push_back(texture)
 # L2l <-> L23l
 
 # GR <-> L1r
-mlink = chrono.ChLinkRevolute()                                 #create revolute joint object
-
-local = True                                                    #we will use the local frame
-GR_frame =  chrono.ChFrameD(chrono.ChVectorD(0,0,0))            #local frame of attachment
-L1r_frame = chrono.ChFrameD(chrono.ChVectorD(0.0,-1*_L1r,-.02))     #local frame of attachment
-
-mlink.Initialize(GL,L1r,local,GR_frame,L1r_frame)
-mysystem.Add(mlink)
+#mlink = chrono.ChLinkRevolute()                                 #create revolute joint object
+#
+#local = True                                                    #we will use the local frame
+#GR_frame =  chrono.ChFrameD(chrono.ChVectorD(0,0,0))            #local frame of attachment
+#L1r_frame = chrono.ChFrameD(chrono.ChVectorD(0.0,-1*_L1r,-.02))     #local frame of attachment
+#
+#mlink.Initialize(GL,L1r,local,GR_frame,L1r_frame)
+#mysystem.Add(mlink)
 
 ## l1r <-> L2r
 #mmlink = chrono.ChLinkRevolute()                                 #create revolute joint object
