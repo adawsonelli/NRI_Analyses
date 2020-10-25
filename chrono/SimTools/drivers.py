@@ -30,22 +30,38 @@ we will have to calculate the IK twice, but this isn't so bad.
 """
 
 
-#refactor this to be inhereted??
-def plot_EE(traj):
-    ts = np.linspace(0,2,1000)
-    c = circle("l",2,.5,-.5,.1)
-    xs = np.zeros(ts.shape) ; ys = np.zeros(ts.shape)
-    for i,t in enumerate(ts):
-        xs[i] , ys[i] = c.EE_location(t)
-    #plt.plot(xs,ys)
-    #plt.scatter(xs, ys, c = plt.cm.jet(ts/max(ts)))
 
-
-
-
-class circle(chrono.ChFunction):
-    def __init__(self,actuator,period,x,y,r):
+#add some plotting functions for all the trajectories classes to share
+class ChFunction(chrono.ChFunction):
+    def __init__(self):
         chrono.ChFunction.__init__(self)
+    
+    def EE_location(self,t):
+        return (0,0)
+    
+    def Get_y(self,t):
+        return 0
+    
+    def plot_EE(self,t=2):
+        ts = np.linspace(0,t,1000)
+        xs = np.zeros(ts.shape) ; ys = np.zeros(ts.shape)
+        for i,t in enumerate(ts):
+            xs[i] , ys[i] = self.EE_location(t)
+        plt.plot(xs,ys)
+        #plt.scatter(xs, ys, c = plt.cm.jet(ts/max(ts)))
+    
+    def plot_y(self,t=2):
+        ts = np.linspace(0,t,1000)
+        ys = np.zeros(ts.shape)
+        for i,t in enumerate(ts):
+            ys[i] = self.Get_y(t)
+        plt.plot(ts,ys)
+        
+
+
+class circle(ChFunction):
+    def __init__(self,actuator,period,x,y,r):
+        ChFunction.__init__(self)
         self.actuator = actuator
         self.period = period
         self.x = x
@@ -104,6 +120,15 @@ class star(chrono.ChFunction):
 
 
 
+"""
+we should really figure out why the model needs to be run with so many minus signs? 
+could it be because of the left handed coordinate system? it doesn't seem like 
+there is congruence between the "set rotation" function - which sets a rotation 
+relative to the global frame, and an angle driving function which supposedly goes 
+to the same location??? this should be investigated with an experiment at some point. 
+"""
+
+
 
 
 
@@ -138,44 +163,6 @@ def addRotationAngleDrivers(sys,θ1l = None ,θ1r = None):
          Drvr.SetAngleFunction(θ1r) 
     mdls.add_θ1r_joint(sys,Drvr)
    
-
-
-
-
-    
-
-"""
-you will probably always add the same type of driver to both, consider refactoring
-here in the future, where you would supply a flag, or the type of driver fxn explicitly, 
-it will be more clear in the future. 
-"""
-
-def _addRotationAngleDrivers(sys,θ1l = None ,θ1r = None):
-    """
-    adds two ChLinkMotorRotationAngle to the system, with their respective fxns
-    inputs:
-        sys - the chrono system with ALEX Robot 
-        θ1l - [ChFunction] - driving the first joint
-        θ1r - [ChFunction] - driving the second joint
-    """
-    
-    #joint l
-    jtl = sys.SearchLink("GB<->L1l")
-    sys.RemoveLink(jtl)
-    Drvl = chrono.ChLinkMotorRotationAngle()
-    if θ1l != None:
-        Drvl.SetAngleFunction(θ1l)  ## this isn't the right thing - need to look up how to do it properly
-    mdls.add_θ1l_joint(sys,Drvl)
-    
-    #joint r
-    jtr = sys.SearchLink("GB<->L1r")
-    sys.RemoveLink(jtr)
-    Drvr = chrono.ChLinkMotorRotationAngle()
-    if θ1r != None:
-         Drvr.SetAngleFunction(θ1r) 
-    mdls.add_θ1r_joint(sys,Drvr)
-   
-
 
 
 #---------------------------- torque motors -----------------------------------

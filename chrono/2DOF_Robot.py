@@ -17,8 +17,11 @@ assetsPath = "C:/Users/adaws/Documents/gitRepos/NRI_Analyses/chrono/assets/"
 # ----------- Calculate IK angles using custom Library ------------------------
 
 #initial location of the end effector (EE) of the ALEX Robot
-Xee =  .5    #(these form the initial conditions of the robot)
+Xee =  .5       #(these form the initial conditions of the robot)
 Yee = -.5
+
+#specify mass properties of the payload at the end effector. 
+eeMass = 1   
 
 
 #set the elbow discrete vars this will flip for right vs. left side useage
@@ -90,6 +93,7 @@ mysystem = chrono.ChSystemNSC()
 
 #------------- ground body ------------
 GB = chrono.ChBodyAuxRef()
+GB.SetName("GB")
 GB.SetPos(chrono.ChVectorD(0,(yl+yr)/2,0))
 GB.SetBodyFixed(True)
 
@@ -130,8 +134,9 @@ L1l = chrono.ChBodyAuxRef()
 L1l.SetBodyFixed(False)
 mysystem.Add(L1l)
 
-#add mass properties  //improve these based on actual data...
-L1l.SetMass(1)
+#add mass properties
+L1l.SetMass(.398)
+#L1l.SetInertiaXX(chrono.ChVectorD(.00003,.00808,.00810)) #from solidworks
 
 #set position,orientation with FK
 x =  xl + (_L1l/2)*np.cos(θ1l)
@@ -157,11 +162,15 @@ L1l.GetAssets().push_back(texture)
 #----------- left link 2 ------------------
 #add body
 L2l = chrono.ChBodyAuxRef()
+L2l.SetName("L2l")
 L2l.SetBodyFixed(False)
 mysystem.Add(L2l)
 
 #add mass properties  //improve these based on actual data...
-L1l.SetMass(1)
+m = .266 + .274
+L2l.SetMass(m)
+#L2l.SetInertiaXX(chrono.ChVectorD(.00005,.02053,.02057)) #from solidworks
+
 
 #set position,orientation with FK
 x =  xl + (_L1l)*np.cos(θ1l) + (_L23l/2)*np.cos(θ1l + θ2l)
@@ -191,8 +200,9 @@ L1r = chrono.ChBodyAuxRef()
 L1r.SetBodyFixed(False)
 mysystem.Add(L1r)
 
-#add mass properties  //improve these based on actual data...
-L1l.SetMass(1)
+#add mass properties
+L1r.SetMass(.236)
+L1r.SetInertiaXX(chrono.ChVectorD(.00002,.00171,.00172))  #from solidworks
 
 #set position,orientation with FK
 x =  xr + (_L1r/2)*np.cos(θ1r)
@@ -217,11 +227,14 @@ L1r.GetAssets().push_back(texture)
 #----------- right link 2 -----------------
 #add body
 L2r = chrono.ChBodyAuxRef()
+L2r.SetName("L2r")
 L2r.SetBodyFixed(False)
 mysystem.Add(L2r)
 
 #add mass properties  //improve these based on actual data...
-L1l.SetMass(1)
+L2r.SetMass(.334)
+#L2r.SetInertiaXX(chrono.ChVectorD(.00003,.00475,.00478))
+
 
 #set position,orientation with FK
 x =  xr + (_L1r)*np.cos(θ1r) + (_L2r/2)*np.cos(θ1r + θ2r)
@@ -250,7 +263,8 @@ ee.SetBodyFixed(False)
 mysystem.Add(ee)
 
 #add mass properties  //improve these based on actual data...
-L1l.SetMass(1)
+ee.SetMass(eeMass)
+#ee.SetInertiaXX(chrono.ChVectorD(.00001,.00001,.00001))
 
 #set position,orientation with FK
 x =  xl + (_L1l)*np.cos(θ1l) + (_L23l)*np.cos(θ1l + θ2l)
@@ -312,7 +326,8 @@ L2l_frame = chrono.ChFrameD(chrono.ChVectorD(dj,0,.01))              #local fram
 L2r_frame = chrono.ChFrameD(chrono.ChVectorD(_L2r/2,0,0))            #local frame of attachment
 jt.Initialize(L2l,L2r,local,L2l_frame,L2r_frame)                     #init joint
 mysystem.Add(jt)                                                     #add to system
-#
+
+
 ##------------- EE <-> L2l --------------
 jt = chrono.ChLinkRevolute()                                         #create revolute joint object
 local = True                                                         #we will use the local frame                                          #distance from center to joint point
@@ -366,4 +381,50 @@ while(myapplication.GetDevice().run()):
     myapplication.EndScene()
 
 
+
+#------------------------------- to do ----------------------------------------
+"""
+* finish specifying the inertial properties of the system
+* to continue to debug this issue, make another file which is a double pendulum with the easy mesh importer 
+* and see if it performs poorly. 
+* figure out how to modularize the system, so that it can be imported into other analyses
+* figure out how to get nice plots
+* information regarding how long it takes to execute some of these analyses with a fixed, and variable timestep. 
+* next analysis should be inverse dynamic analysis of the robotic mechanism (next week)
+* the next next analysis should be forward dynamic analysis with a PID controller (two weeks)
+* might want to consider including the inertia for a leg model. 
+
+
+notes for considering refactor that will reduce code repetition.
+
+realistically, we just want to encapsulate the building of the system, so that 
+process doesn't need to be replicated in each analysis we want to perform. this 
+could be done functionally, where there is a function with default arguments
+that we could overload, and then the system object is returned, or it could be done
+in an object oriented way, where we make a container object for the system, that 
+manages aspects of the simulation, but that also makes it easy to access things for 
+add on analyses. at present,
+
+I'm leaning towards a libary of functions, that either
+return or take system objects and modify those system objects and that are easy
+to add on to. let me give an example usecase I'm thinking of. 
+
+suppose we want to do some foward dynamic simulations, with a motor of a particular size and fxn. 
+the model we use will be the same as any other, but to it, we will add (via scripting) a motor
+with a torque that varies with time. if we have access to the system object, we can initialize it, 
+then take it and call the add motor function, then pass that object to another function that 
+will forward simulate the system, either for visualization, or to plot various variables. 
+
+the fatal flaw in this approach is the difficulty of retrieving relevant objects from
+the chrono system object. I'm doing research now to see if it's possible to tag components
+such as bodies, joints, frame,etc. with a unique name identifier, that way, with a bit of 
+extra code, it would be possible to modularize things (not repeat yourself), while 
+adding minimal complexity, simply giving each unique component which would be accessed in 
+the future a unique name. 
+
+the function I'm looking for, curiously enough is called Search. I will experiment with this
+enough to ensure that the approach is sound (by seeing if I can use it to add a joint by name)
+then we can move forward with the re-factor
+
+"""
 

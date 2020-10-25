@@ -6,6 +6,7 @@ library of functions for constructing chrono models
 import pychrono.core as chrono
 import pychrono.irrlicht as chronoirr
 import numpy as np
+from models import 
 
 # Change this path to asset path, if running from other working dir. 
 # It must point to the data folder, containing GUI assets (textures, fonts, meshes, etc.)
@@ -16,337 +17,90 @@ assetsPath = "C:/Users/adaws/Documents/gitRepos/NRI_Analyses/chrono/assets/"
 
 #------------------- public facing functions ----------------------------------
 
-def buildALEXR(system,
-               Xee  = .5,
-               Yee  = -.5,
-               eeMass = 1,
-               side = "right"):
+def genMinJerkTrajectory(Xs,Ys,tf,npts):
     """
-    public interface for building the ALEXR
-    
-    :param system: the Chrono system to which the ALEXR robot is added
+    pass
     """
+    pass
+
+
+def CubicPoly(Xs,Ys,Vxs,Vys,ts,nSamps):
+    """
+    create a cubic polynomial trajectory of the end effector from a series of 
+    locations (end points and via points), velocities, and times - specifiying 
+    the number of samples.
+    inputs:
+        Xs -  the x - locations of the via points [list or np.array]
+        Ys -  the y - locations of the via points [list or np.array]
+        Vxs - the x velocity at each point - None if it doesn't matter. [list or np.array]
+        Vys - the y velocity at each point - None if it doesn't matter. [list or np.array]
+        ts - the time samples - not strictly uniformly sampled
+        nSamps - the number of samples in the output to uniformly sample between [0 - tf]
+    """
+    pass
+
+def CubicPolyJoints(Xs,Ys,Vxs,Vys,ts,nSamps):
+    """
+    from a specification of end-effector cubic Poly parameters, determine trajectories
+    for each of the 2 driving joints, θ1l and θ1r
+    inputs:
+        same as Cubic Poly
+    outputs:
+        θ1l - time trajectory of  and θ1r
+    """
+    pass
+
+
+
+
+
+#
+#function [t y yd ydd] = QuinticPolynomial(t0, tf, y0, yf, yd0, ydf, ydd0, yddf, n)
+#%QUINTICPOLYNOMIAL creates a quinitic spline fit given the initial time and
+#%kinematic parameters. 
+#%inputs: 
+#    % t0   - initial time
+#    % tf   - final time
+#    % y0   - inital position
+#    % yf   - final position
+#    % yd0  - initial velocity
+#    % ydf  - final velocity
+#    % ydd0 - initial acceleration
+#    % yddf - final acceleration
+#    % n    - number of samples
+#%outputs: 
+#    % t  - [1xn] time vector (evenly spaced row vector)
+#    % y  - [1xn] position vector
+#    % yd - [1xn] velocity vector
+#    %ydd - [1xn] acceleration vector
+#
+#%solve for co-efficients a0 - a5 using matrix inversion
+#% Ca = q   ->  a = C/q
+#    
+#%coefficient matrix  
+#C = [1    t0   t0^2   t0^3    t0^4     t0^5
+#     0    1    2*t0   3*t0^2  4*t0^3   5*t0^4 
+#     0    0    2      6*t0    12*t0^2  20*t0^3
+#     1    tf   tf^2   tf^3    tf^4     tf^5
+#     0    1    2*tf   3*tf^2  4*tf^3   5*tf^4
+#     0    0    2      6*tf    12*tf^2  20*tf^3];
+#
+#y = [y0 yd0 ydd0 yf ydf yddf]'; %specified positions/velocities
+#
+#a = C\y; %calculated quintic polynomial coefficients
+#
+#%----use the quintic spline co-efficients to create time vectors---------
+#t = linspace(0,tf,n);
+#
+#%extract co-efficients
+#a0 = a(1); a1 = a(2); a2 = a(3); a3 = a(4); a4 = a(5); a5 = a(6);
+#
+#%solve for position, velocity, acceleration vectors
+#y   =   a0 +   a1*t +    a2*t.^2 +    a3*t.^3 +   a4*t.^4 + a5*t.^5;
+#yd  =   a1 + 2*a2*t +  3*a3*t.^2 +  4*a4*t.^3 + 5*a5*t.^4;
+#ydd = 2*a2 + 6*a3*t + 12*a4*t.^2 + 20*a5*t.^3;
+#
+#
+#end
+
     
-    #----------- Calculate IK angles using custom Library ---------------------
-    
-    #initial location of the end effector (EE) of the ALEX Robot
-    Xee =  .5       #(these form the initial conditions of the robot)
-    Yee = -.5
-    
-    #specify mass properties of the payload at the end effector. 
-    eeMass = 1   
-    
-    
-    #set the elbow discrete vars this will flip for right vs. left side useage
-    side = "right"  # "left"
-    if side == "right":
-        ef = "up"
-        e3 = "down"
-    elif side == "left":
-        ef = "down"
-        e3 = "up"
-    
-    
-    #----------- Calculate IK angles using custom Library ---------------------
-    
-    #hardcode robot link lengths and origins
-    xl = 0 ; yl = -.27 
-    xr = 0 ; yr = -.055
-    
-    
-    #left robot
-    _L1l = .48               #meters
-    _L2l = .28               #meters
-    _L3l = .38               #meters
-    _L23l = _L2l + _L3l      #the angle between them is 0, therfore they may be treated as the same link
-    
-    
-    #right robot
-    _L1r = .28               #the right robot is a normal RR robot
-    _L2r = .40
-    
-    
-    #inverse kinematics equations for an RR robot
-    def IK_RR(x,y,l1,l2,elbow):
-        """
-        perform Inverse Kinematics on an RR robot, see lect5 p.9-10 
-        """
-        #solve for intermediate values
-        r = np.linalg.norm((x,y)) - 1e-12 #solves numerical issue at θ2 == 0 
-        β = np.arccos((l1**2 + l2**2 - r**2) / (2*l1*l2))
-        γ = np.arccos((r**2 + l1**2 - l2**2) / (2*r*l1))
-        α = np.arctan2(y,x)
-        
-        #handle different elbow states
-        θ1 = α - γ
-        θ2 = np.pi - β
-        
-        if elbow == "down":
-            return θ1,θ2
-        elif elbow == "up":
-            θ1pm = θ1 + 2*γ  
-            θ2pm = -θ2   
-            return θ1pm,θ2pm
-        
-    
-    #calculate IK robot angles (this version is simplified from the Gen5bl to the case where θ=0)
-    θ1l , θ2l = IK_RR(Xee - xl,Yee - yl,_L1l,_L23l,ef)     #IK of the left robot to end effector location
-    Jx = Xee - _L3l*np.cos(θ1l + θ2l)                      #locations of the joint in 3D space 
-    Jy = Yee - _L3l*np.sin(θ1l + θ2l)                      #(vector subtraction method)
-    θ1r , θ2r = IK_RR(Jx - xr,Jy - yr,_L1r,_L2r,e3)         #IK of the right robot
-    
-    
-    #perform a check here, and throw an error if the original configuration can't be solved.
-    if np.isnan(θ1l and θ2l and θ1r and θ2r):
-        raise ValueError("there is no solution to IK for the end-effector location specified (Xee,Yee)")
-    
-        
-    #--------------- Create the simulation system ---------------------------------
-    mysystem = chrono.ChSystemNSC()
-    
-    #--------------- create each link as a rigid body -----------------------------
-    
-    #------------- ground body ------------
-    GB = chrono.ChBodyAuxRef()
-    GB.SetPos(chrono.ChVectorD(0,(yl+yr)/2,0))
-    GB.SetBodyFixed(True)
-    
-    #set mesh visualization
-    mesh_for_visualization = chrono.ChTriangleMeshConnected()
-    mesh_for_visualization.LoadWavefrontMesh(assetsPath +'ground.obj')
-    
-    # Optionally: you can scale/shrink/rotate/translate the mesh using this:
-    meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
-    mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), meshRotation)
-    
-    # Now the  triangle mesh is inserted in a ChTriangleMeshShape visualization asset, 
-    # and added to the body
-    visualization_shape = chrono.ChTriangleMeshShape()
-    visualization_shape.SetMesh(mesh_for_visualization)
-    GB.AddAsset(visualization_shape)
-    mysystem.Add(GB)
-    
-    
-    #--------- coordinate frame ---------------
-    coord = chrono.ChBodyAuxRef()
-    coord.SetPos(chrono.ChVectorD(0,0,0))
-    coord.SetBodyFixed(True)
-    
-    mesh_for_visualization = chrono.ChTriangleMeshConnected()
-    mesh_for_visualization.LoadWavefrontMesh(assetsPath +'coords.obj')
-    mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), chrono.ChMatrix33D(.01))
-    
-    visualization_shape = chrono.ChTriangleMeshShape()
-    visualization_shape.SetMesh(mesh_for_visualization)
-    coord.AddAsset(visualization_shape)
-    mysystem.Add(coord)
-    
-    
-    #----------- left link 1 ------------------
-    #add body
-    L1l = chrono.ChBodyAuxRef()
-    L1l.SetBodyFixed(False)
-    mysystem.Add(L1l)
-    
-    #add mass properties
-    L1l.SetMass(.398)
-    #L1l.SetInertiaXX(chrono.ChVectorD(.00003,.00808,.00810)) #from solidworks
-    
-    #set position,orientation with FK
-    x =  xl + (_L1l/2)*np.cos(θ1l)
-    y =  yl + (_L1l/2)*np.sin(θ1l)
-    L1l.SetPos(chrono.ChVectorD(x,y,.01))
-    L1l.SetRot(chrono.ChMatrix33D(θ1l,chrono.ChVectorD(0,0,1)))
-    
-    #add visualization
-    mesh_for_visualization = chrono.ChTriangleMeshConnected()
-    mesh_for_visualization.LoadWavefrontMesh(assetsPath +'_L1l.obj')
-    meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
-    mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), meshRotation)
-    
-    visualization_shape = chrono.ChTriangleMeshShape()
-    visualization_shape.SetMesh(mesh_for_visualization)
-    L1l.AddAsset(visualization_shape)
-    
-    texture = chrono.ChTexture()
-    texture.SetTextureFilename(assetsPath + 'blue.png')
-    L1l.GetAssets().push_back(texture)
-    
-    
-    #----------- left link 2 ------------------
-    #add body
-    L2l = chrono.ChBodyAuxRef()
-    L2l.SetBodyFixed(False)
-    mysystem.Add(L2l)
-    
-    #add mass properties  //improve these based on actual data...
-    m = .266 + .274
-    L2l.SetMass(m)
-    #L2l.SetInertiaXX(chrono.ChVectorD(.00005,.02053,.02057)) #from solidworks
-    
-    
-    #set position,orientation with FK
-    x =  xl + (_L1l)*np.cos(θ1l) + (_L23l/2)*np.cos(θ1l + θ2l)
-    y =  yl + (_L1l)*np.sin(θ1l) + (_L23l/2)*np.sin(θ1l + θ2l)
-    L2l.SetPos(chrono.ChVectorD(x,y,.02))
-    L2l.SetRot(chrono.ChMatrix33D(θ1l + θ2l,chrono.ChVectorD(0,0,1)))
-    
-    #add visualization
-    mesh_for_visualization = chrono.ChTriangleMeshConnected()
-    mesh_for_visualization.LoadWavefrontMesh(assetsPath +'_L2l.obj')
-    meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
-     #mesh origin was slightly off, so I hand tuned it 
-    mesh_for_visualization.Transform(chrono.ChVectorD(-.00775,0,0), meshRotation)
-    
-    visualization_shape = chrono.ChTriangleMeshShape()
-    visualization_shape.SetMesh(mesh_for_visualization)
-    L2l.AddAsset(visualization_shape)
-    
-    texture = chrono.ChTexture()
-    texture.SetTextureFilename(assetsPath + 'blue.png')
-    L2l.GetAssets().push_back(texture)
-    
-    
-    #----------- right link 1 -----------------
-    #add body
-    L1r = chrono.ChBodyAuxRef()
-    L1r.SetBodyFixed(False)
-    mysystem.Add(L1r)
-    
-    #add mass properties
-    L1r.SetMass(.236)
-    L1r.SetInertiaXX(chrono.ChVectorD(.00002,.00171,.00172))  #from solidworks
-    
-    #set position,orientation with FK
-    x =  xr + (_L1r/2)*np.cos(θ1r)
-    y =  yr + (_L1r/2)*np.sin(θ1r)
-    L1r.SetPos(chrono.ChVectorD(x,y,.02))
-    L1r.SetRot(chrono.ChMatrix33D(θ1r,chrono.ChVectorD(0,0,1)))
-    
-    #add visualization
-    mesh_for_visualization = chrono.ChTriangleMeshConnected()
-    mesh_for_visualization.LoadWavefrontMesh(assetsPath +'_L1r.obj')
-    meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
-    mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), meshRotation)
-    
-    visualization_shape = chrono.ChTriangleMeshShape()
-    visualization_shape.SetMesh(mesh_for_visualization)
-    L1r.AddAsset(visualization_shape)
-    
-    texture = chrono.ChTexture()
-    texture.SetTextureFilename(assetsPath + 'red.png')
-    L1r.GetAssets().push_back(texture)
-    
-    #----------- right link 2 -----------------
-    #add body
-    L2r = chrono.ChBodyAuxRef()
-    L2r.SetBodyFixed(False)
-    mysystem.Add(L2r)
-    
-    #add mass properties  //improve these based on actual data...
-    L2r.SetMass(.334)
-    #L2r.SetInertiaXX(chrono.ChVectorD(.00003,.00475,.00478))
-    
-    
-    #set position,orientation with FK
-    x =  xr + (_L1r)*np.cos(θ1r) + (_L2r/2)*np.cos(θ1r + θ2r)
-    y =  yr + (_L1r)*np.sin(θ1r) + (_L2r/2)*np.sin(θ1r + θ2r)
-    L2r.SetPos(chrono.ChVectorD(x,y,.03))
-    L2r.SetRot(chrono.ChMatrix33D(θ1r + θ2r,chrono.ChVectorD(0,0,1)))
-    
-    #add visualization
-    mesh_for_visualization = chrono.ChTriangleMeshConnected()
-    mesh_for_visualization.LoadWavefrontMesh(assetsPath +'_L2r.obj')
-    meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
-    mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), meshRotation)
-    
-    visualization_shape = chrono.ChTriangleMeshShape()
-    visualization_shape.SetMesh(mesh_for_visualization)
-    L2r.AddAsset(visualization_shape)
-    
-    texture = chrono.ChTexture()
-    texture.SetTextureFilename(assetsPath + 'red.png')
-    L2r.GetAssets().push_back(texture)
-    
-    #----------- end effector payload ---------
-    #add body
-    ee = chrono.ChBodyAuxRef()
-    ee.SetBodyFixed(False)
-    mysystem.Add(ee)
-    
-    #add mass properties  //improve these based on actual data...
-    ee.SetMass(eeMass)
-    #ee.SetInertiaXX(chrono.ChVectorD(.00001,.00001,.00001))
-    
-    #set position,orientation with FK
-    x =  xl + (_L1l)*np.cos(θ1l) + (_L23l)*np.cos(θ1l + θ2l)
-    y =  yl + (_L1l)*np.sin(θ1l) + (_L23l)*np.sin(θ1l + θ2l)
-    ee.SetPos(chrono.ChVectorD(x,y,.03))
-    ee.SetRot(chrono.ChMatrix33D(0,chrono.ChVectorD(0,0,1)))
-    
-    #add visualization
-    mesh_for_visualization = chrono.ChTriangleMeshConnected()
-    mesh_for_visualization.LoadWavefrontMesh(assetsPath +'_EE.obj')
-    meshRotation = chrono.ChMatrix33D(np.pi/2,chrono.ChVectorD(0,1,0))
-    mesh_for_visualization.Transform(chrono.ChVectorD(0,0,0), meshRotation)
-    
-    visualization_shape = chrono.ChTriangleMeshShape()
-    visualization_shape.SetMesh(mesh_for_visualization)
-    ee.AddAsset(visualization_shape)
-    
-    
-    #----------------------- create the revolute joints ---------------------------
-    
-    #------------- GB  <-> L1l --------------
-    jt = chrono.ChLinkRevolute()                                         #create revolute joint object
-    local = True                                                         #we will use the local frame
-    GB_frame =  chrono.ChFrameD(chrono.ChVectorD(0,-1*(yr - yl)/2,0.01))  #local frame of attachment
-    L1l_frame = chrono.ChFrameD(chrono.ChVectorD(-1*_L1l/2,0,0))         #local frame of attachment
-    jt.Initialize(GB,L1l,local,GB_frame,L1l_frame)                       #init joint
-    mysystem.Add(jt)                                                     #add to system
-    
-    ##------------- L1l <-> L2l --------------
-    jt = chrono.ChLinkRevolute()                                         #create revolute joint object
-    local = True                                                         #we will use the local frame
-    L1l_frame = chrono.ChFrameD(chrono.ChVectorD(_L1l/2,0,0.01))          #local frame of attachment
-    L2l_frame = chrono.ChFrameD(chrono.ChVectorD(-1*_L23l/2,0,0))        #local frame of attachment
-    jt.Initialize(L1l,L2l,local,L1l_frame,L2l_frame)                     #init joint
-    mysystem.Add(jt)                                                     #add to system
-    
-    ##------------- GB  <-> L1r --------------
-    jt = chrono.ChLinkRevolute()                                         #create revolute joint object
-    local = True                                                         #we will use the local frame
-    GB_frame =  chrono.ChFrameD(chrono.ChVectorD(0,(yr - yl)/2,.02))     #local frame of attachment
-    L1r_frame = chrono.ChFrameD(chrono.ChVectorD(-1*_L1r/2,0,0))         #local frame of attachment
-    jt.Initialize(GB,L1r,local,GB_frame,L1r_frame)                       #init joint
-    mysystem.Add(jt)                                                     #add to system
-    
-    
-    ##------------- L1r <-> L2r --------------
-    jt = chrono.ChLinkRevolute()                                         #create revolute joint object
-    local = True                                                         #we will use the local frame
-    L1r_frame = chrono.ChFrameD(chrono.ChVectorD(_L1r/2,0,.01))          #local frame of attachment
-    L2r_frame = chrono.ChFrameD(chrono.ChVectorD(-1*_L2r/2,0,0))        #local frame of attachment
-    jt.Initialize(L1r,L2r,local,L1r_frame,L2r_frame)                     #init joint
-    mysystem.Add(jt)                                                     #add to system
-    
-    ##------------- L2l <-> L2r --------------
-    jt = chrono.ChLinkRevolute()                                         #create revolute joint object
-    local = True                                                         #we will use the local frame
-    dj = -1*(_L23l/2 - _L2l)                                             #distance from center to joint point
-    L2l_frame = chrono.ChFrameD(chrono.ChVectorD(dj,0,.01))              #local frame of attachment
-    L2r_frame = chrono.ChFrameD(chrono.ChVectorD(_L2r/2,0,0))            #local frame of attachment
-    jt.Initialize(L2l,L2r,local,L2l_frame,L2r_frame)                     #init joint
-    mysystem.Add(jt)                                                     #add to system
-    #
-    ##------------- EE <-> L2l --------------
-    jt = chrono.ChLinkRevolute()                                         #create revolute joint object
-    local = True                                                         #we will use the local frame                                          #distance from center to joint point
-    L2l_frame = chrono.ChFrameD(chrono.ChVectorD(_L23l/2,0,.01))         #local frame of attachment
-    ee_frame = chrono.ChFrameD(chrono.ChVectorD(0,0,0))                  #local frame of attachment
-    jt.Initialize(L2l,ee,local,L2l_frame,ee_frame)                       #init joint
-    mysystem.Add(jt)                                                     #add to system
-    
-    
-    
-    #return the system object that has been updated with all 

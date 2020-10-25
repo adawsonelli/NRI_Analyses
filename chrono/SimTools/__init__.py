@@ -8,6 +8,9 @@ import all of the files within the module into a common namespace
 from SimTools.models import buildALEXR
 
 #motors
+from SimTools.drivers import *
 
 #vis
 from SimTools.vis import animateSystem
+
+#drivers
