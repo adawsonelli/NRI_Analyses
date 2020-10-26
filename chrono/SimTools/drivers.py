@@ -39,8 +39,13 @@ class ChFunction(chrono.ChFunction):
     def EE_location(self,t):
         return (0,0)
     
-    def Get_y(self,t):
-        return 0
+    def Get_y(self, t):
+        Xee,Yee = self.EE_location(t)
+        θ1l , θ2l, θ1r , θ2r = self.a.IK_2DOF(Xee,Yee)  #how should we deal with side here - ignore for now??
+        if self.actuator == "l":
+            return -θ1l                                  #why the heck does this need to be negative???
+        elif self.actuator == "r":
+            return -θ1r
     
     def plot_EE(self,t=2):
         ts = np.linspace(0,t,1000)
@@ -72,33 +77,47 @@ class circle(ChFunction):
     def EE_location(self,t):
         x = self.r*np.cos(-2*np.pi*t/self.period) + self.x  -self.r
         y = self.r*np.sin(-2*np.pi*t/self.period) + self.y
-        return(x,y)
+        return(x,y)    
         
-    def Get_y(self, t):
-        Xee,Yee = self.EE_location(t)
-        θ1l , θ2l, θ1r , θ2r = self.a.IK_2DOF(Xee,Yee)  #how should we deal with side here - ignore for now??
-        if self.actuator == "l":
-            return -θ1l                                  #why the heck does this need to be negative???
-        elif self.actuator == "r":
-            return -θ1r
+    """
+    this might be able to live in the base class, as it is unchanged??
+    this is actually a really interesting point, if it's defined in the baseclass, 
+    would the call to self refer to the implemented class? I think that it would have to, and 
+    then the same function could be inhereted and used over and over - very cool
+    """
+#    
+#    def Get_y(self, t):
+#        Xee,Yee = self.EE_location(t)
+#        θ1l , θ2l, θ1r , θ2r = self.a.IK_2DOF(Xee,Yee)  #how should we deal with side here - ignore for now??
+#        if self.actuator == "l":
+#            return -θ1l                                  #why the heck does this need to be negative???
+#        elif self.actuator == "r":
+#            return -θ1r
 
+
+def minJerkTraj(t,tf,x0,xf):
+        th = t/tf
+        return x0 + (x0 - xf)*(15*th**4 - 6*th**5 - 10*th**3)
 
 class point2point(chrono.ChFunction):
     """
-    go from point 1 to point 2 and back
+    go from point 1 to point 2 and back, using a minimum jerk trajectory
     """
     def __init__(self,dwellTime,transitTime,x1,y1,x2,y2):
         self.dwellTime = dwellTime
         self.transitTime = transitTime
-        self.x = x
-        self.y = y
-        self.r = r
+        self.x1 = x1
+        self.x2 = x2
+        self.y1 = y1
+        self.y2 = y2
         
-    def EE_location(t):
-        pass
+    
+        
+    def EE_location(self,t):
+        #make the function periodic with modulo.
+        x = minJerkTraj(t,self.transitTime,)
         
     def Get_y(self, t):
-        y = math.cos(math.pi * x)
         return y
 
 
