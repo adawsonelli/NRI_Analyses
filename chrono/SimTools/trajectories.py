@@ -17,6 +17,35 @@ assetsPath = "C:/Users/adaws/Documents/gitRepos/NRI_Analyses/chrono/assets/"
 
 #------------------- public facing functions ----------------------------------
 
+"""
+refactor, so that all trajectory functions are located here. 
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def genMinJerkTrajectory(Xs,Ys,tf,npts):
     """
     pass
