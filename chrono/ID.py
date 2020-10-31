@@ -24,14 +24,13 @@ sys = chrono.ChSystemNSC()         #initialize the system
 st.models.buildALEXR(sys)          #add ALEXR robot
 
 #add driving function
-circ_left  = st.drivers.Circle("l",period,x0,y0,rad) 
-circ_right = st.drivers.Circle("r",period,x0,y0,rad)
+circ_left  = st.trajectories.Circle("l",period,x0,y0,rad) 
+circ_right = st.trajectories.Circle("r",period,x0,y0,rad)
 
 st.drivers.addRotationAngleDrivers(sys,circ_left,circ_right)
 
 #animate the system
 st.animateSystem(sys)              #visualize the system
-
 
 
 #%%  circle animation - large circle
@@ -45,8 +44,8 @@ sys = chrono.ChSystemNSC()         #initialize the system
 st.models.buildALEXR(sys)          #add ALEXR robot
 
 #add driving function
-circ_left  = st.drivers.Circle("l",period,x0,y0,rad) 
-circ_right = st.drivers.Circle("r",period,x0,y0,rad)
+circ_left  = st.trajectories.Circle("l",period,x0,y0,rad) 
+circ_right = st.trajectories.Circle("r",period,x0,y0,rad)
 st.drivers.addRotationAngleDrivers(sys,circ_left,circ_right)
 
 #animate the system
@@ -64,8 +63,8 @@ sys = chrono.ChSystemNSC()         #initialize the system
 st.models.buildALEXR(sys)          #add ALEXR robot
 
 #add driving function
-p2p_left  = st.drivers.point2point("l",x1,y1,x2,y2) 
-p2p_right = st.drivers.point2point("r",x1,y1,x2,y2)
+p2p_left  = st.trajectories.point2point("l",x1,y1,x2,y2) 
+p2p_right = st.trajectories.point2point("r",x1,y1,x2,y2)
 st.drivers.addRotationAngleDrivers(sys,p2p_left,p2p_right)
 
 #animate the system
@@ -83,8 +82,8 @@ sys = chrono.ChSystemNSC()         #initialize the system
 st.models.buildALEXR(sys)          #add ALEXR robot
 
 #add driving function
-p2p_left  = st.drivers.Star("l",x,y,r,npoints) 
-p2p_right = st.drivers.Star("r",x,y,r,npoints)
+p2p_left  = st.trajectories.Star("l",x,y,r,npoints) 
+p2p_right = st.trajectories.Star("r",x,y,r,npoints)
 st.drivers.addRotationAngleDrivers(sys,p2p_left,p2p_right)
 
 #animate the system

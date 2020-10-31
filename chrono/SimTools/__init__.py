@@ -14,3 +14,6 @@ from SimTools.drivers import *
 from SimTools.vis import animateSystem
 
 #drivers
+
+#trajectories
+from SimTools.trajectories import *
