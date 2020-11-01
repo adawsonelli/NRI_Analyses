@@ -12,24 +12,6 @@ import time
 
 
 #------------------------- class definitions ----------------------------------
-
-"""
-capabilities to considering adding to this class
-** change the line to be more configurable (thicker, fade out, etc)
-** pull out strobe into it's own class, and add the ability to add multiple strobes easily, 
-** each with configuration settings, including colors, so that we can look at trajectories 
-simultaniously. 
-** add the ability to fail gracefully into the class - so if the link isn't there, just print something and don't fail.
-** this represents another 3 hr commitment, so I may punt on this refactor for now
-
-"""
-
- 
-"""
-we should also see what the deal is with the color function, to see if we can adjust the alpha and maybe the color too?
-and the thickness
-"""
-
 class Trace:
     def __init__(self,system,bodyFrame,tFade=1.5,freq=10):
         self.bodyFrame = bodyFrame
@@ -83,15 +65,6 @@ class animationModifiers():
             self.traceActive = True
             self.traces.append(Trace(system,bd,tFade,freq))
             return
-        
-        #links aren't comming through, but it's ok.
-        link = system.SearchLink(bodyName)
-        if type(link) != type(None): 
-            self.traceActive = True
-            bd = link.GetAssetsFrame()
-            self.traces.append(Trace(system,bd,tFade,freq))
-            return
-            
         
     def addCOGframes(self,system):
         self.COGframesActive = True
