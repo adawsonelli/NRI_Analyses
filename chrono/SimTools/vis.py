@@ -31,11 +31,10 @@ and the thickness
 """
 
 class Trace:
-    def __init__(self,system,bodyName,tFade=1.5,freq=10,A0=1):
-        self.bodyFrame = system.SearchBody(bodyName)
+    def __init__(self,system,bodyFrame,tFade=1.5,freq=10):
+        self.bodyFrame = bodyFrame
         self.tFade = tFade
         self.freq = freq
-        self.A0 = A0
         self.points = []
         self.trajHistory = None
         self.n = 0
@@ -62,11 +61,13 @@ class animationModifiers():
         #trace vars
         self.traces = []
         self.traceActive = False
+        self.COGframesActive = False
         
         #add COG ref-frames
+        self.system = None
         #add x,y,z to the animation as a modifier - see ChIrrTools
     
-    def addTrace(self,system,bodyName,tFade=1.5,freq=10,A0=1):
+    def addTrace(self,system,bodyName,tFade=1.5,freq=10):
         """
         add a trace effect to a body reference frame (usually the EE)
         inputs:
@@ -76,12 +77,25 @@ class animationModifiers():
             freq - number of dots added per second
             A0 - default opacity
         """
-        self.traceActive = True
-        self.traces.append(Trace(system,bodyName,tFade,freq,A0))
+        #clean the name and add frame if appropriate
+        bd = system.SearchBody(bodyName)
+        if type(bd) != type(None):
+            self.traceActive = True
+            self.traces.append(Trace(system,bd,tFade,freq))
+            return
         
-       
-    def addCOGrfs(self,IrrApp):
-        pass
+        #links aren't comming through, but it's ok.
+        link = system.SearchLink(bodyName)
+        if type(link) != type(None): 
+            self.traceActive = True
+            bd = link.GetAssetsFrame()
+            self.traces.append(Trace(system,bd,tFade,freq))
+            return
+            
+        
+    def addCOGframes(self,system):
+        self.COGframesActive = True
+        self.system = system
     
     def draw(self,IrrApp):
         """
@@ -90,6 +104,9 @@ class animationModifiers():
         if self.traceActive:
             for trace in self.traces:
                 trace.update(IrrApp)
+        if self.COGframesActive:
+            chronoirr.ChIrrTools_drawAllCOGs(self.system,IrrApp.GetVideoDriver(),.05)
+            
     
     
     
