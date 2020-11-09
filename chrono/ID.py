@@ -30,7 +30,20 @@ circ_right = st.trajectories.Circle("r",period,x0,y0,rad)
 st.drivers.addRotationAngleDrivers(sys,circ_left,circ_right)
 
 #animate the system
-st.animateSystem(sys)              #visualize the system
+am = st.vis.animationModifiers()
+am.addTrace(sys,"EE")
+am.addTrace(sys,"L2l")
+#am.addCOGframes(sys)
+
+#animate the system
+st.animateSystem(sys,am)              
+
+#plot the torques
+st.plots.plotTorques(sys,10) #ringing coming from ICs??
+
+#plot the torques
+st.plots.plotTorques(sys,6,3)  
+
 
 
 #%%  circle animation - large circle
@@ -48,9 +61,19 @@ circ_left  = st.trajectories.Circle("l",period,x0,y0,rad)
 circ_right = st.trajectories.Circle("r",period,x0,y0,rad)
 st.drivers.addRotationAngleDrivers(sys,circ_left,circ_right)
 
-#animate the system
-st.animateSystem(sys)              #visualize the system
 
+
+#animate the system
+am = st.vis.animationModifiers()
+am.addTrace(sys,"EE")
+am.addTrace(sys,"L2l")
+st.animateSystem(sys,am)              #visualize the system
+
+#plot the torques
+#st.plots.plotTorques(sys,3)
+
+#plot the torques
+st.plots.plotTorques(sys,6,3)
 
 #%% reaching - point to point
 
@@ -68,7 +91,15 @@ p2p_right = st.trajectories.point2point("r",x1,y1,x2,y2)
 st.drivers.addRotationAngleDrivers(sys,p2p_left,p2p_right)
 
 #animate the system
-st.animateSystem(sys) 
+am = st.vis.animationModifiers()
+am.addTrace(sys,"EE")
+am.addTrace(sys,"L2l")
+st.animateSystem(sys,am)              #visualize the system
+
+#plot the torques
+st.plots.plotTorques(sys,3)
+
+
 
 
 #%% star pattern
@@ -86,8 +117,18 @@ p2p_left  = st.trajectories.Star("l",x,y,r,npoints)
 p2p_right = st.trajectories.Star("r",x,y,r,npoints)
 st.drivers.addRotationAngleDrivers(sys,p2p_left,p2p_right)
 
+
 #animate the system
-st.animateSystem(sys) 
+am = st.vis.animationModifiers()
+am.addTrace(sys,"EE")
+st.animateSystem(sys,am)              #visualize the system
+
+
+#plot the torques
+#st.plots.plotTorques(sys,20)
+
+#plot the torques
+st.plots.plotTorques(sys,10,5)
 
 
 

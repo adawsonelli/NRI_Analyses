@@ -17,3 +17,6 @@ from SimTools.vis import animateSystem
 
 #trajectories
 from SimTools.trajectories import *
+
+#plots
+from SimTools.plots import * 
