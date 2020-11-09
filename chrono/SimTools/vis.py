@@ -60,7 +60,7 @@ class animationModifiers():
             A0 - default opacity
         """
         #clean the name and add frame if appropriate
-        bd = system.SearchBody(bodyName)
+        bd = system.refs[bodyName]
         if type(bd) != type(None):
             self.traceActive = True
             self.traces.append(Trace(system,bd,tFade,freq))
@@ -80,6 +80,8 @@ class animationModifiers():
         if self.COGframesActive:
             chronoirr.ChIrrTools_drawAllCOGs(self.system,IrrApp.GetVideoDriver(),.05)
             
+
+
     
     
     

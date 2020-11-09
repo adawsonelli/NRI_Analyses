@@ -97,12 +97,12 @@ def add_θ1l_joint(system,joint):
     adds the type of joint (either driven or non-driven) at the θ1l location
     """
     a = ALEXR()                                                               # contains robot state information
-    joint.SetName("GB<->L1l")                                                 # set the name of the joint
+    system.refs["GB<->L1l"] = joint                                           # maintain a reference to the joint
     local = True                                                              # we will use the local frame
     GB_frame =  chrono.ChFrameD(chrono.ChVectorD(0,-1*(a.yr - a.yl)/2,0.01))  # local frame of attachment  (hardcode here once)
     L1l_frame = chrono.ChFrameD(chrono.ChVectorD(-1*a.L1l/2,0,0))             # local frame of attachment  (hardcode here once)
-    GB  = system.SearchBody("GB")                                             # get a reference to the ground body
-    L1l = system.SearchBody("L1l")                                            # get a reference to Link 1 body
+    GB  = system.refs["GB"]                                                   # get a reference to the ground body
+    L1l = system.refs["L1l"]                                                  # get a reference to Link 1 body
     joint.Initialize(GB,L1l,local,GB_frame,L1l_frame)                         # init joint
     system.Add(joint)                                                         # add to system
     
@@ -112,12 +112,12 @@ def add_θ1r_joint(system,joint):
     adds the type of joint (either driven or non-driven) at the θ1r location
     """
     a = ALEXR()                                                               # contains robot state information
-    joint.SetName("GB<->L1r")                                                 # set the name of the joint
+    system.refs["GB<->L1r"] = joint                                           # maintain a reference to the joint
     local = True                                                              # we will use the local frame
     GB_frame =  chrono.ChFrameD(chrono.ChVectorD(0,(a.yr - a.yl)/2,.02))      # local frame of attachment (hardcode here once)
     L1r_frame = chrono.ChFrameD(chrono.ChVectorD(-1*a.L1r/2,0,0))             # local frame of attachment (hardcode here once)
-    GB  = system.SearchBody("GB")                                             # get a reference to the ground body
-    L1r = system.SearchBody("L1r")                                            # get a reference to Link 1 body
+    GB  = system.refs["GB"]                                                   # get a reference to the ground body
+    L1r = system.refs["L1r"]                                                  # get a reference to Link 1 body
     joint.Initialize(GB,L1r,local,GB_frame,L1r_frame)                         # init joint
     system.Add(joint)   
     
@@ -149,7 +149,8 @@ def buildALEXR(system,
     
     
     #----------- Calculate IK angles using custom Library ---------------------
-    a = ALEXR()  #encodes robot state info
+    a = ALEXR()        #encodes robot state info
+    system.refs = {}   #setup the dictionary of object references
     
     #ALEXR link lengths and origins
     xl = a.xl ; yl = a.yl 
@@ -178,7 +179,6 @@ def buildALEXR(system,
     
     #------------- ground body ------------
     GB = chrono.ChBodyAuxRef()
-    GB.SetName("GB")
     GB.SetPos(chrono.ChVectorD(0,(yl+yr)/2,0))
     GB.SetBodyFixed(True)
     
@@ -196,6 +196,7 @@ def buildALEXR(system,
     visualization_shape.SetMesh(mesh_for_visualization)
     GB.AddAsset(visualization_shape)
     system.Add(GB)
+    system.refs["GB"] = GB
     
     
     #--------- coordinate frame ---------------
@@ -216,9 +217,9 @@ def buildALEXR(system,
     #----------- left link 1 ------------------
     #add body
     L1l = chrono.ChBodyAuxRef()
-    L1l.SetName("L1l")
     L1l.SetBodyFixed(False)
     system.Add(L1l)
+    system.refs["L1l"] = L1l
     
     #add mass properties
     L1l.SetMass(.398)
@@ -248,9 +249,9 @@ def buildALEXR(system,
     #----------- left link 2 ------------------
     #add body
     L2l = chrono.ChBodyAuxRef()
-    L2l.SetName("L2l")
     L2l.SetBodyFixed(False)
     system.Add(L2l)
+    system.refs["L2l"] = L2l
     
     #add mass properties  //improve these based on actual data...
     m = .266 + .274
@@ -284,9 +285,9 @@ def buildALEXR(system,
     #----------- right link 1 -----------------
     #add body
     L1r = chrono.ChBodyAuxRef()
-    L1r.SetName("L1r")
     L1r.SetBodyFixed(False)
     system.Add(L1r)
+    system.refs["L1r"] = L1r
     
     #add mass properties
     L1r.SetMass(.236)
@@ -315,9 +316,9 @@ def buildALEXR(system,
     #----------- right link 2 -----------------
     #add body
     L2r = chrono.ChBodyAuxRef()
-    L2r.SetName("L2r")
     L2r.SetBodyFixed(False)
     system.Add(L2r)
+    system.refs["L2r"] = L2r
     
     #add mass properties  //improve these based on actual data...
     L2r.SetMass(.334)
@@ -347,9 +348,9 @@ def buildALEXR(system,
     #----------- end effector payload ---------
     #add body
     ee = chrono.ChBodyAuxRef()
-    ee.SetName("ee")
     ee.SetBodyFixed(False)
     system.Add(ee)
+    system.refs["EE"] = ee
     
     #add mass properties  //improve these based on actual data...
     ee.SetMass(eeMass)
@@ -375,17 +376,17 @@ def buildALEXR(system,
     #----------------------- create the revolute joints ---------------------------
     
     #------------- GB  <-> L1l --------------
-#    jt = chrono.ChLinkRevolute()                                         # 
+#    jt = chrono.ChLinkRevolute()                                        #set higher up 
 #    add_θ1l_joint(system,jt)         
 #     
     ##------------- L1l <-> L2l --------------
-    jt = chrono.ChLinkRevolute()                                         # create revolute joint object
-    jt.SetName("L1l<->L2l")                                              # set the name of the joint
+    jt = chrono.ChLinkRevolute()                                         # create revolute joint object                       
     local = True                                                         # we will use the local frame
     L1l_frame = chrono.ChFrameD(chrono.ChVectorD(_L1l/2,0,0.01))         # local frame of attachment
     L2l_frame = chrono.ChFrameD(chrono.ChVectorD(-1*_L23l/2,0,0))        # local frame of attachment
     jt.Initialize(L1l,L2l,local,L1l_frame,L2l_frame)                     # init joint
     system.Add(jt)                                                       # add to system
+    system.refs["L1l<->L2l"] = jt                                        # maintain a reference to the joint
     
     ##------------- GB  <-> L1r --------------
 #    jt = chrono.ChLinkRevolute()
@@ -394,31 +395,31 @@ def buildALEXR(system,
     
     ##------------- L1r <-> L2r --------------
     jt = chrono.ChLinkRevolute()                                         # create revolute joint object
-    jt.SetName("L1r<->L2r")                                              # set the name of the joint
     local = True                                                         # we will use the local frame
     L1r_frame = chrono.ChFrameD(chrono.ChVectorD(_L1r/2,0,.01))          # local frame of attachment
     L2r_frame = chrono.ChFrameD(chrono.ChVectorD(-1*_L2r/2,0,0))         # local frame of attachment
     jt.Initialize(L1r,L2r,local,L1r_frame,L2r_frame)                     # init joint
     system.Add(jt)                                                       # add to system
+    system.refs["L1r<->L2r"] = jt                                        # maintain a reference to the joint
     
     ##------------- L2l <-> L2r --------------
     jt = chrono.ChLinkRevolute()                                         # create revolute joint object
-    jt.SetName("l2l<->L2r")                                              # set the name of the joint
     local = True                                                         # we will use the local frame
     dj = -1*(_L23l/2 - _L2l)                                             # distance from center to joint point
     L2l_frame = chrono.ChFrameD(chrono.ChVectorD(dj,0,.01))              # local frame of attachment
     L2r_frame = chrono.ChFrameD(chrono.ChVectorD(_L2r/2,0,0))            # local frame of attachment
     jt.Initialize(L2l,L2r,local,L2l_frame,L2r_frame)                     # init joint
     system.Add(jt)                                                       # add to system
+    system.refs["L2l<->L2r"] = jt                                        # maintain a reference to the joint
     #
     ##------------- ee <-> L2l --------------
     jt = chrono.ChLinkRevolute()                                         # create revolute joint object
-    jt.SetName("ee<->L2l")                                               # set the name of the joint
     local = True                                                         # we will use the local frame
     L2l_frame = chrono.ChFrameD(chrono.ChVectorD(_L23l/2,0,.01))         # local frame of attachment
     ee_frame = chrono.ChFrameD(chrono.ChVectorD(0,0,0))                  # local frame of attachment
     jt.Initialize(L2l,ee,local,L2l_frame,ee_frame)                       # init joint
     system.Add(jt)                                                       # add to system
+    system.refs["EE<->L2l"] = jt                                        # maintain a reference to the joint
     
     
     
