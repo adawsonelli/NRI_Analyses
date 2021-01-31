@@ -31,6 +31,18 @@ st.animateSystem(sys)                    #visualize the system
 
 #%% ----------------------------- NOTES ---------------------------------------
 
+    
+"""
+
+* why is so much torque going into gravity compensation, and if this is the case, why is this not showing up in 
+* the jacobian that I computed? by hand
+* go back to your model and figure out if force space shrinks when you extend the robot, it should
+* why is so much of our torque taken up, even in slow movements?
+* make a switch to turn on gravity and inertial terms? 
+* 
+"""    
+
+
 """
 * figure out if there is a bug in the model, in how joint on theta1l is implemented
 * the first link doesn't look entirely correct either. 

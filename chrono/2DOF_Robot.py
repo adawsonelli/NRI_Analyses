@@ -383,6 +383,8 @@ while(myapplication.GetDevice().run()):
 
 
 #------------------------------- to do ----------------------------------------
+
+    
 """
 * finish specifying the inertial properties of the system
 * to continue to debug this issue, make another file which is a double pendulum with the easy mesh importer 

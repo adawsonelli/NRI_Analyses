@@ -21,7 +21,10 @@ period = 1.5 ; rad = .1
 
 #setup system
 sys = chrono.ChSystemNSC()         #initialize the system
-st.models.buildALEXR(sys)          #add ALEXR robot
+st.models.buildALEXR(sys,eeMass=20)          #add ALEXR robot
+
+#remove gravity
+sys.Set_G_acc(chrono.ChVectorD(0,0,0)) 
 
 #add driving function
 circ_left  = st.trajectories.Circle("l",period,x0,y0,rad) 
@@ -33,7 +36,7 @@ st.drivers.addRotationAngleDrivers(sys,circ_left,circ_right)
 am = st.vis.animationModifiers()
 am.addTrace(sys,"EE")
 am.addTrace(sys,"L2l")
-#am.addCOGframes(sys)
+am.addCOGframes(sys)
 
 #animate the system
 st.animateSystem(sys,am)              
@@ -50,7 +53,7 @@ st.plots.plotTorques(sys,6,3)
 
 #init
 x0 = .75 ; y0 = -.6
-period = 3 ; rad = .25
+period = 100 ; rad = .25
 
 #setup system
 sys = chrono.ChSystemNSC()         #initialize the system
@@ -78,58 +81,66 @@ st.plots.plotTorques(sys,6,3)
 #%% reaching - point to point
 
 #init
-x1 = .4 ; y1 = -.4 
-x2 = .6 ; y2 = -.6
+#x1 = .4 ; y1 = -.4 
+#x2 = .6 ; y2 = -.6
+
+
+x1 = .8 ; y1 = -.3 
+x2 = .45 ; y2 = -.3
+
+tt1 = 3; tt2 = 3
+
 
 #setup system
 sys = chrono.ChSystemNSC()         #initialize the system
 st.models.buildALEXR(sys)          #add ALEXR robot
 
 #add driving function
-p2p_left  = st.trajectories.point2point("l",x1,y1,x2,y2) 
-p2p_right = st.trajectories.point2point("r",x1,y1,x2,y2)
+p2p_left  = st.trajectories.point2point("l",x1,y1,x2,y2,tt1=tt1,tt2=tt2) 
+p2p_right = st.trajectories.point2point("r",x1,y1,x2,y2,tt1=tt2,tt2=tt2)
 st.drivers.addRotationAngleDrivers(sys,p2p_left,p2p_right)
 
 #animate the system
 am = st.vis.animationModifiers()
 am.addTrace(sys,"EE")
 am.addTrace(sys,"L2l")
+am.addCOGframes(sys)
 st.animateSystem(sys,am)              #visualize the system
 
 #plot the torques
-st.plots.plotTorques(sys,3)
+st.plots.plotTorques(sys,10,3)
 
 
 
-
-#%% star pattern
-
-#init
-x = .5 ;  y = -.5
-r = .15;  npoints = 7
-
-#setup system
-sys = chrono.ChSystemNSC()         #initialize the system
-st.models.buildALEXR(sys)          #add ALEXR robot
-
-#add driving function
-p2p_left  = st.trajectories.Star("l",x,y,r,npoints) 
-p2p_right = st.trajectories.Star("r",x,y,r,npoints)
-st.drivers.addRotationAngleDrivers(sys,p2p_left,p2p_right)
-
-
-#animate the system
-am = st.vis.animationModifiers()
-am.addTrace(sys,"EE")
-st.animateSystem(sys,am)              #visualize the system
-
-
-#plot the torques
-#st.plots.plotTorques(sys,20)
-
-#plot the torques
-st.plots.plotTorques(sys,10,5)
-
-
+#
+##%% star pattern
+#
+##init
+#x = .5 ;  y = -.5
+#r = .15;  npoints = 7
+#
+##setup system
+#sys = chrono.ChSystemNSC()         #initialize the system
+#st.models.buildALEXR(sys)          #add ALEXR robot
+#
+##add driving function
+#p2p_left  = st.trajectories.Star("l",x,y,r,npoints) 
+#p2p_right = st.trajectories.Star("r",x,y,r,npoints)
+#st.drivers.addRotationAngleDrivers(sys,p2p_left,p2p_right)
+#
+#
+##animate the system
+#am = st.vis.animationModifiers()
+#am.addTrace(sys,"EE")
+#st.animateSystem(sys,am)              #visualize the system
+#
+#
+##plot the torques
+##st.plots.plotTorques(sys,20)
+#
+##plot the torques
+#st.plots.plotTorques(sys,10,5)
+#
+#
 
 
