@@ -6,9 +6,10 @@ channels:
 dependencies:
   - python=3.7            # can't go 3.8 for pychrono
   - jupyterlab=2*       
-  - pychrono=5.0.0        #this worked before
+  - pychrono=5.0.0        
   - plotly=4.14.*
   - matplotlib
+  - scipy
   - numpy
   - ipywidgets>7.5        # for interactivity
   - shapely=1.7.0         # for shape objects and overlap calculation - compatable with py 3.7
@@ -16,3 +17,5 @@ dependencies:
   - xeus-python           # for debugger extension
   - ptvsd                 # ford debugger extension
   - nodejs                # to install jupyterlab extensions
+  pip:
+      - landscapes        # test functionsfor optimizer evaluation
