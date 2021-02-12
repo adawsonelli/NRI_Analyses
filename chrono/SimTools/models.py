@@ -90,6 +90,17 @@ class ALEXR:
         #return full IK angles
         return θ1l , θ2l, θ1r , θ2r
     
+    def feasable_point(self,Xee,Yee,side = "right"):
+        """
+        return's true if IK solves, false if it does not. 
+        """
+        θ1l , θ2l, θ1r , θ2r = self.IK_2DOF(Xee, Yee,side)
+        if np.isnan(θ1l and θ2l and θ1r and θ2r):
+            return False
+        else:
+            return True
+        
+    
 
 
 #------------------- public facing functions ----------------------------------    
@@ -178,7 +189,7 @@ def buildALEXR(system,
    
     
     #perform a check here, and throw an error if the original configuration can't be solved.
-    if np.isnan(θ1l and θ2l and θ1r and θ2r):
+    if not a.feasable_point(Xee, Yee,side):
         raise ValueError("there is no solution to IK for the end-effector location specified (Xee,Yee)")
     
     

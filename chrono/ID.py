@@ -17,14 +17,14 @@ import SimTools as st
 
 #init
 x0 = .5 ; y0 = -.5
-period = 1.5 ; rad = .1
+period = 1 ; rad = .01
 
 #setup system
-sys = chrono.ChSystemNSC()         #initialize the system
-st.models.buildALEXR(sys,eeMass=20)          #add ALEXR robot
+sys = chrono.ChSystemNSC()                   #initialize the system
+st.models.buildALEXR(sys,eeMass=1)          #add ALEXR robot
 
 #remove gravity
-sys.Set_G_acc(chrono.ChVectorD(0,0,0)) 
+#sys.Set_G_acc(chrono.ChVectorD(0,0,0)) 
 
 #add driving function
 circ_left  = st.trajectories.Circle("l",period,x0,y0,rad) 
@@ -53,7 +53,7 @@ st.plots.plotTorques(sys,6,3)
 
 #init
 x0 = .75 ; y0 = -.6
-period = 100 ; rad = .25
+period = 3 ; rad = .25
 
 #setup system
 sys = chrono.ChSystemNSC()         #initialize the system
@@ -68,8 +68,8 @@ st.drivers.addRotationAngleDrivers(sys,circ_left,circ_right)
 
 #animate the system
 am = st.vis.animationModifiers()
-am.addTrace(sys,"EE")
-am.addTrace(sys,"L2l")
+am.addTrace(sys,"EE",tFade=4)
+am.addTrace(sys,"L2l",tFade=4)
 st.animateSystem(sys,am)              #visualize the system
 
 #plot the torques
@@ -113,34 +113,34 @@ st.plots.plotTorques(sys,10,3)
 
 
 #
-##%% star pattern
-#
-##init
-#x = .5 ;  y = -.5
-#r = .15;  npoints = 7
-#
-##setup system
-#sys = chrono.ChSystemNSC()         #initialize the system
-#st.models.buildALEXR(sys)          #add ALEXR robot
-#
-##add driving function
-#p2p_left  = st.trajectories.Star("l",x,y,r,npoints) 
-#p2p_right = st.trajectories.Star("r",x,y,r,npoints)
-#st.drivers.addRotationAngleDrivers(sys,p2p_left,p2p_right)
-#
-#
-##animate the system
-#am = st.vis.animationModifiers()
-#am.addTrace(sys,"EE")
-#st.animateSystem(sys,am)              #visualize the system
-#
-#
-##plot the torques
-##st.plots.plotTorques(sys,20)
-#
-##plot the torques
-#st.plots.plotTorques(sys,10,5)
-#
-#
+#%% star pattern
+
+#init
+x = .5 ;  y = -.5
+r = .15;  npoints = 7
+
+#setup system
+sys = chrono.ChSystemNSC()         #initialize the system
+st.models.buildALEXR(sys)          #add ALEXR robot
+
+#add driving function
+p2p_left  = st.trajectories.Star("l",x,y,r,npoints) 
+p2p_right = st.trajectories.Star("r",x,y,r,npoints)
+st.drivers.addRotationAngleDrivers(sys,p2p_left,p2p_right)
+
+
+#animate the system
+am = st.vis.animationModifiers()
+am.addTrace(sys,"EE")
+st.animateSystem(sys,am)              #visualize the system
+
+
+#plot the torques
+#st.plots.plotTorques(sys,20)
+
+#plot the torques
+st.plots.plotTorques(sys,10,5)
+
+
 
 

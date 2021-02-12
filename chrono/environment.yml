@@ -1,0 +1,12 @@
+name: chrono
+channels:
+  - projectchrono
+  - conda-forge
+dependencies:
+  - python=3.7
+  - pychrono=5.0.0   
+  - matplotlib
+  - numpy
+  - scipy
+  - spyder
+

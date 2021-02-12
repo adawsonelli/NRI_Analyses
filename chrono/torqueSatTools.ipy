@@ -1,0 +1,247 @@
+# -*- coding: utf-8 -*-
+"""
+torqueSatTools - functions creates specifically for measuring the torque 
+saturation of the ALEXR robot at different locations within the workspace. 
+"""
+
+#imports
+import pychrono.core as chrono
+import numpy as np
+import SimTools as st
+import os
+import h5py
+from SimTools.models import ALEXR
+import matplotlib.pyplot as plt
+from scipy.interpolate import make_interp_spline
+from scipy.interpolate import sproot
+
+
+
+def calcTorque(f,Xee,Yee,A,eeMass,gravity = True):
+    """
+    calculate torque required by motors 1 and 2 to achieve a specified circular
+    movement, at a particular frequency and amplitude.
+    inputs: 
+        f      - frequency of movement in Hz
+        Xee    - x location of end effector
+        Yee    - y location of end effector
+        A      - amplitude of circle in meters (radius)
+        eeMass - mass of end effector
+    outputs:
+        τ1 - motor1 max torque amplitude from ID analysis (after stabilization)
+        τ2 - motor2 max torque amplitude from ID analysis (after stabilization)
+        
+    """
+    
+    #setup system
+    system = chrono.ChSystemNSC()                           #initialize the system
+    st.models.buildALEXR(system,Xee,Yee,eeMass)             #add ALEXR robot
+    
+    #remove gravity
+    if not gravity: system.Set_G_acc(chrono.ChVectorD(0,0,0)) 
+    
+    #add driving function to system
+    period = 1/f; rad = A ; x0 = Xee; y0 = Yee
+    circ_left  = st.trajectories.Circle("l",period,x0,y0,rad) 
+    circ_right = st.trajectories.Circle("r",period,x0,y0,rad)
+    st.drivers.addRotationAngleDrivers(system,circ_left,circ_right)
+
+    #simulate the system and solve for the torques w/ ID analysis
+    t0 = 4                                # don't count the first n seconds of the simulation
+    tf = 6                                # final time 
+    time = tf-t0                          # recorded time
+    dt = .005                             # make this a function of frequency?
+    t =  np.arange(0,time + dt,dt)  
+    τ1 = np.zeros_like(t)
+    τ2 = np.zeros_like(t)   
+    θ1l = system.refs["GB<->L1l"]
+    θ1r = system.refs["GB<->L1r"]
+
+    i = 0
+    system.SetChTime(0)
+    while (system.GetChTime() < tf):
+        system.DoStepDynamics(dt)
+        if system.GetChTime() >= t0:
+            τ1[i] = θ1l.GetMotorTorque()
+            τ2[i] = θ1r.GetMotorTorque()
+            i +=1
+            
+    # return the maximum torques
+    mx = lambda v : np.max(np.abs(v)) 
+    return mx(τ1),mx(τ2)
+
+def torqueFunction(f,Xee,Yee,A,eeMass):
+    """
+    wrapper for secant method that incorporates τmax
+    """
+    τmax = 100
+    return np.max(calcTorque(f,Xee,Yee,A,eeMass)) - τmax
+      
+    
+def SecantMethod(func,x0,x1,*args):
+    """
+    newtons method with secant lines instead of true tangents
+    inputs:
+        func - function handle
+        x0 - first guess for root
+        x1 - second guess for root
+        *args - extra arguments for the function 
+    """
+    maxIter = 50
+    ϵ = 1
+    i = 0
+    while i < maxIter:
+        x2 = x1 - func(x1,*args) / ((func(x1,*args) - func(x0,*args)) / (x1 - x0))
+        if (abs(x2 - x1) < ϵ):
+            return x2
+        else:
+            x0, x1 = x1 , x2    
+
+
+
+def bsplineRootMethod(Xee,Yee,A,eeMass):
+    """
+    find freq where torque exceeds torque max
+    """
+    #sample the frequency space
+    freq = np.logspace(np.log10(.2),np.log10(30),num=10)
+    torque = np.full_like(freq, 0)
+    for i,f in enumerate(freq):
+        torque[i] = np.max(calcTorque(f,Xee,Yee,A,eeMass))
+    
+    #form a bs-spline and solve for the root
+    try:
+        bs = make_interp_spline(freq, torque - 100, k=3)  #100 = tau max
+        root = sproot(bs)
+        return root
+    except:
+        return np.nan
+    
+    
+
+
+
+def findFreq(Xee,Yee,A,eeMass):
+    """
+    use the newton-rhapson method to find the frequency at which the maximum
+    torque is exceeded. 
+    """
+    method = "bs"
+    #initialize guess
+    if method == "secant":
+        x0 = 1 #hz
+        x1 = 5 #hz
+        freq = SecantMethod(torqueFunction, x0, x1, Xee,Yee,A,eeMass)
+    elif method == "bs":
+        freq = np.min(bsplineRootMethod(Xee,Yee,A,eeMass))
+    return freq
+  
+    
+    
+
+def plotfreqResp(Xee,Yee,A,eeMass):
+    """
+    visualize how the required torque changes as a function of cyclic frequency 
+    """
+    #sample amplitude response
+    freq = np.logspace(np.log10(.2),np.log10(20),num=10)
+    τmax = np.full_like(freq, 0)
+    t_no_grav = np.full_like(freq, 0)
+    for i,f in enumerate(freq):
+        τmax[i] = np.max(calcTorque(f,Xee,Yee,A,eeMass))
+        t_no_grav[i] = np.max(calcTorque(f,Xee,Yee,A,eeMass,gravity=False))
+    
+    #plot response
+    colors = ['#6565ffff',"#ff5252ff"]              #blue, red
+    plt.figure(figsize = (12,6),facecolor = 'w')
+    #plt.title(r"$\bf{\tau_{L}(t)}}$ and $\bf{\tau_{R}(t)}}$ ", fontsize = 18)
+    plt.xlabel('Freq(Hz)', fontsize=16)
+    plt.ylabel('Torque(Nm)', fontsize=16)
+    
+    plt.plot(freq,τmax,label=r"$\tau_{max} gravity$",color=colors[0],linewidth=4.0)
+    plt.plot(freq,t_no_grav,label=r"$\tau_{max} no gravity$",color=colors[1],linewidth=4.0)
+    
+    plt.legend(fontsize = 18)
+    plt.grid(alpha = .2)
+    return (freq , τmax)
+
+
+
+def sampleSpace(A,eeMass):
+    """
+    samples the workspace and calculates the threashold frequency at torque saturation
+    then saves this value in an hdf5 file. 
+    """
+    
+    #perform annulus sampling
+    n1 = 10 ; n2 = 10
+    R = np.linspace(.3,1,n1)          #meters
+    θ = np.linspace(0,-3*np.pi/4,n2)  #rad
+    x = np.full(n1*n2,np.nan)
+    y = np.full(n1*n2,np.nan)
+    freq = np.full(n1*n2,np.nan)
+    i = 0
+    for r in R:
+        for ang in θ:
+            x[i] = r * np.cos(ang) 
+            y[i] = r * np.sin(ang)
+            i += 1
+            
+    #for each sample, find the frequency at which the torque saturates
+    a = ALEXR()
+    for i, ele in enumerate(x):
+        #check that IK solves - through the whole circular path - by checking a inscribing rectangle
+        if a.feasable_point(x[i] + A,y[i] + A) and  \
+           a.feasable_point(x[i] + A,y[i] - A) and  \
+           a.feasable_point(x[i] - A,y[i] + A) and  \
+           a.feasable_point(x[i] - A,y[i] - A):
+               freq[i] = findFreq(x[i],y[i],A,eeMass)
+               print(i," of ",len(x))
+        
+               
+    # #cache these data in an hdf5 file
+    # cwd = os.getcwd()
+    # freqDataName = "freq_" + str(A) + "_" +  str(eeMass) + "_gravity"
+    # f = h5py.File(cwd + "\\data\\" + "_workspaceFreqData" + ".hdf5" , "a")  #open or create
+    
+    
+    # #clear old data if there to properly overwrite
+    # if "x" in f: del f["x"]
+    # if "y" in f: del f["y"]
+    # if freqDataName in f: del f[freqDataName] 
+    
+    # #add new data
+    # f.create_dataset("x" , data = x)
+    # f.create_dataset("y" , data = y)
+    # f.create_dataset(freqDataName , data = freq)
+    # f.close()
+    
+    
+    #return
+    return x,y,freq
+    
+        
+
+#%% tests
+
+
+if __name__ == "__main__":
+    #check the calc torque function
+    Xee = .5 ; Yee = -.5 ; A = .01 ; f = 1; eeMass = 20 
+    print(calcTorque(f,Xee,Yee,A,eeMass))
+    
+
+    
+
+
+#notes: 
+    
+# should we separate saving from sampling the space? 
+# make another function that will sample the space, and the other params, then
+# caches them. 
+    
+    
+        
+    
+    
+    
